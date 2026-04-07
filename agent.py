@@ -151,12 +151,18 @@ def pickup_loot():
         for lx in range(x + int(W*0.20), x + int(W*0.80), 80):
             pyautogui.rightClick(lx, ly); time.sleep(0.05)
 
+last_popup_cycle = -20
+
 def handle_popup():
+    global last_popup_cycle
+    if cycle - last_popup_cycle < 15: return False  # cooldown
     p = detect_popup()
     if p == "god":
+        last_popup_cycle = cycle
         print("  🔮 God"); pyautogui.click(int(W*0.30), int(Y_OFF+EFF_H*0.25)); time.sleep(1.5)
         log("god"); return True
     if p == "augment":
+        last_popup_cycle = cycle
         print("  ⭐ Aug"); pyautogui.click(*AUG_LOC[0]); time.sleep(1.5)
         log("augment"); return True
     return False
