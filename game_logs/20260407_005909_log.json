@@ -1,0 +1,29 @@
+[
+ {
+  "t": "00:59:09",
+  "ev": "startup",
+  "round": "2-7",
+  "gold": -1,
+  "level": 5,
+  "phase": "EARLY"
+ },
+ {
+  "t": "00:59:09",
+  "ev": "round",
+  "round": "2-7",
+  "level": 5,
+  "phase": "EARLY"
+ },
+ {
+  "t": "00:59:50",
+  "ev": "round",
+  "round": "3-1",
+  "level": 5,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:00:04",
+  "ev": "game_over",
+  "placement": 8
+ }
+]

@@ -1,0 +1,73 @@
+[
+ {
+  "t": "00:55:31",
+  "ev": "startup",
+  "round": "2-3",
+  "gold": 97,
+  "level": 5,
+  "phase": "EARLY"
+ },
+ {
+  "t": "00:55:31",
+  "ev": "round",
+  "round": "2-3",
+  "gold": 97,
+  "level": 5,
+  "phase": "EARLY"
+ },
+ {
+  "t": "00:55:46",
+  "ev": "round",
+  "round": "2-4",
+  "gold": -1,
+  "level": 5,
+  "phase": "EARLY"
+ },
+ {
+  "t": "00:56:43",
+  "ev": "round",
+  "round": "2-5",
+  "gold": 913,
+  "level": 5,
+  "phase": "EARLY"
+ },
+ {
+  "t": "00:57:54",
+  "ev": "round",
+  "round": "2-6",
+  "gold": 22,
+  "level": 5,
+  "phase": "EARLY"
+ },
+ {
+  "t": "00:58:11",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "00:59:03",
+  "ev": "round",
+  "round": "2-7",
+  "gold": 830,
+  "level": 5,
+  "phase": "EARLY"
+ },
+ {
+  "t": "00:59:55",
+  "ev": "round",
+  "round": "3-1",
+  "gold": 830,
+  "level": 5,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:00:06",
+  "ev": "scout"
+ },
+ {
+  "t": "01:00:08",
+  "ev": "game_over",
+  "placement": 8
+ }
+]
