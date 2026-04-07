@@ -219,7 +219,11 @@ try:
         alive, placement = api_alive()
         if not alive:
             print(f"\n☠️ Placement: {placement}")
-            log("game_over", placement=placement); save_history(placement); break
+            log("game_over", placement=placement); save_history(placement)
+            # Click "Exit Now" button (coordinates confirmed at 862, 578)
+            import time as _t; _t.sleep(2)
+            pyautogui.click(862, 578); _t.sleep(1)
+            break
 
         lvl = api_level()
         rnd = read_round(); stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
@@ -237,9 +241,9 @@ try:
         planning = is_planning()
 
         # ── Phase transitions ──
-        if phase == "EARLY" and lvl >= 8:
+        if phase == "EARLY" and (stage >= 4 or lvl >= 8):
             phase = "ROLLDOWN"
-            print(f"\n🎯 → ROLLDOWN (lvl={lvl})")
+            print(f"\n🎯 → ROLLDOWN (stage={stage} lvl={lvl})")
             log("phase", phase="ROLLDOWN")
 
         # ═══ EARLY: buy units, place them, slam items ═══
