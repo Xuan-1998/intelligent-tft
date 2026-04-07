@@ -1,5 +1,7 @@
 #!/usr/bin/env python3 -u
-"""TFT Agent v4 — calibrated OCR + API level, Mecha Fast 8, evolution log"""
+"""TFT Agent v4 — calibrated OCR + API level, Mecha Fast 8, evolution log
+Press Cmd+= to stop at any time.
+"""
 import warnings; warnings.filterwarnings("ignore")
 import os, sys, json, time, re
 os.environ["PYTHONWARNINGS"] = "ignore"
@@ -7,11 +9,29 @@ os.environ["PYTHONWARNINGS"] = "ignore"
 import pyautogui
 import requests, urllib3; urllib3.disable_warnings()
 from difflib import SequenceMatcher
+from pynput import keyboard
 
 from vec4 import Vec4
 from vec2 import Vec2
 from game import find_league_window
 import screen_coords, ocr, game_assets, comps
+
+# ── Cmd+= global stop ──
+RUNNING = True
+_keys = set()
+def _on_press(key):
+    global RUNNING
+    _keys.add(key)
+    if (keyboard.Key.cmd in _keys or keyboard.Key.cmd_r in _keys):
+        try:
+            if hasattr(key, 'char') and key.char == '=':
+                RUNNING = False
+                print("\n🛑 Cmd+= pressed — stopping after this cycle")
+                return False
+        except: pass
+def _on_release(key):
+    _keys.discard(key)
+keyboard.Listener(on_press=_on_press, on_release=_on_release, daemon=True).start()
 
 # ── Window setup ──
 w = find_league_window()
@@ -55,6 +75,15 @@ def log(ev, **kw):
         try:
             ocr._grab((0, 33, 1728, 1035)).save(f"{LOG_DIR}/{GID}_{ev}_{len(LOG)}.png")
         except: pass
+
+def log_state(gold, level, rnd, phase, cycle, shop=None, action=None):
+    """Detailed state log for evolution review"""
+    entry = {"t": time.strftime("%H:%M:%S"), "ev": "tick",
+             "gold": gold, "level": level, "round": rnd,
+             "phase": phase, "cycle": cycle}
+    if shop: entry["shop"] = [s for s in shop if s]
+    if action: entry["action"] = action
+    LOG.append(entry)
 
 def save_log():
     with open(f"{LOG_DIR}/{GID}_log.json", "w") as f:
@@ -197,7 +226,7 @@ buys_total = 0
 start_time = time.time()
 
 try:
-    while True:
+    while RUNNING:
         alive, placement = api_alive()
         if not alive:
             print(f"\n☠️ Game over! Placement: {placement}")
@@ -215,6 +244,10 @@ try:
             print(f"\n[R{rnd}] G:{gold} Lvl:{level} {phase} ({elapsed}s)")
             log("round", round=rnd, gold=gold, level=level, phase=phase)
             last_rnd = rnd
+
+        # Log state every 5 cycles for evolution review
+        if cycle % 5 == 0:
+            log_state(gold, level, rnd, phase, cycle)
 
         # ── Popups ──
         if handle_popup():
@@ -254,14 +287,14 @@ try:
         # ── ROLLDOWN: level 8, roll for carries ──
         elif phase == "ROLLDOWN":
             xp_count = 0
-            while api_level() < 8 and read_gold() > 4:
+            while RUNNING and api_level() < 8 and read_gold() > 4:
                 buy_xp(); xp_count += 1
                 if xp_count > 20: break
             print(f"  Level: {api_level()}")
 
             targets = comps.ROLLDOWN_BUYS | comps.EARLY_GAME_BUYS
             rolls, found = 0, []
-            while read_gold() > 10 and rolls < 30:
+            while RUNNING and read_gold() > 10 and rolls < 30:
                 reroll_shop()
                 shop = read_shop()
                 for i, ch in enumerate(shop):
