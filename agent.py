@@ -133,6 +133,9 @@ def detect_popup():
 def buy_slot(i): pyautogui.click(*BUY[i]); time.sleep(0.08)
 def buy_xp(): pyautogui.click(*BUY_XP); time.sleep(0.08)
 def reroll_shop(): pyautogui.click(*REROLL); time.sleep(0.08)
+def sell_bench(i):
+    pyautogui.moveTo(*BENCH[i]); time.sleep(0.15)
+    pyautogui.press('e'); time.sleep(0.15)
 
 def place_bench_to_board():
     lvl = api_level()
@@ -252,22 +255,38 @@ try:
             if cycle % 3 == 0: place_bench_to_board()
             if cycle % 4 == 0: slam_items()
 
-        # ═══ ROLLDOWN: level 8, roll for carries ═══
+        # ═══ ROLLDOWN: sell trash, level 8, roll for carries ═══
         elif phase == "ROLLDOWN" and planning:
+            # Sell all bench units first to make room
+            for i in range(9): sell_bench(i)
+            print("  🗑️ Sold bench")
+
             ct = 0
             while RUNNING and api_level() < 8 and ct < 40:
-                buy_xp(); ct += 1; time.sleep(0.08)
+                g = read_gold()
+                if g >= 0 and g < 4: break
+                buy_xp(); ct += 1; time.sleep(0.15)
             print(f"  Leveled to {api_level()}")
 
-            # Roll and blind-buy all slots 20 times
-            for roll in range(20):
+            targets = comps.ROLLDOWN_BUYS | comps.EARLY_GAME_BUYS
+            found = []
+            for roll in range(25):
                 if not RUNNING: break
+                g = read_gold()
+                if g >= 0 and g < 10: break
                 reroll_shop()
-                for i in range(5): buy_slot(i)
+                shop = read_shop()
+                for i, ch in enumerate(shop):
+                    if not ch: continue
+                    cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
+                    if ch in targets or cost >= 4:
+                        buy_slot(i); found.append(ch)
+                        print(f"  🎯 {ch} ({cost}g)")
+                        log("buy", champ=ch, cost=cost)
 
             place_bench_to_board(); slam_items()
-            print(f"  Rolldown done")
-            log("rolldown")
+            print(f"  Rolldown: {found}")
+            log("rolldown", found=found)
             phase = "LATEGAME"; print(f"\n🏆 → LATEGAME")
 
         # ═══ LATEGAME: buy all, occasional reroll ═══
