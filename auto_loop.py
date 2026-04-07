@@ -60,7 +60,7 @@ def exit_dead_game():
     print("  Exiting dead game (Esc → Exit Game)...")
     pyautogui.press('escape')
     time.sleep(2)
-    for cx, cy in [(443, 653), (440, 650), (445, 655)]:
+    for cx, cy in [(443, 665), (443, 670), (468, 661)]:
         pyautogui.click(cx, cy)
         time.sleep(0.5)
     time.sleep(5)
