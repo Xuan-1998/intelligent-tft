@@ -273,13 +273,14 @@ try:
             xp_count, stall = 0, 0
             while RUNNING and api_level() < 8:
                 buy_xp(); xp_count += 1
-                time.sleep(0.15)
-                if api_level() == prev_lvl:
+                time.sleep(0.2)
+                cur = api_level()
+                if cur == prev_lvl:
                     stall += 1
-                    if stall > 5: break  # no gold to buy XP
+                    if stall > 10: break  # truly out of gold
                 else:
-                    prev_lvl = api_level(); stall = 0
-                if xp_count > 30: break
+                    prev_lvl = cur; stall = 0
+                if xp_count > 40: break
             print(f"  Leveled to {api_level()} ({xp_count} xp buys)")
 
             # Roll and buy everything good
@@ -305,23 +306,27 @@ try:
         # ═══ LATEGAME: opportunistic buys + level 9 ═══
         elif phase == "LATEGAME":
             shop = read_shop()
+            bought_this_cycle = []
             for i, ch in enumerate(shop):
                 if not ch: continue
                 cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                if ch in ALWAYS_BUY or cost >= 4:
+                # Only buy if it's a target unit (not just any expensive unit)
+                if ch in ALWAYS_BUY:
                     buy_slot(i)
+                    bought_this_cycle.append(ch)
                     print(f"  ⬆️ {ch} ({cost}g)")
                     log("buy", champ=ch, cost=cost)
 
-            if cycle % 4 == 0:
+            if bought_this_cycle and cycle - last_place_cycle >= 2:
                 place_bench_to_board()
+                last_place_cycle = cycle
 
             # Try to level to 9 occasionally
-            if level < 9 and cycle % 5 == 0:
+            if level < 9 and cycle % 8 == 0:
                 buy_xp()
 
-            # Reroll occasionally with spare gold
-            if cycle % 3 == 0:
+            # Reroll less aggressively
+            if cycle % 6 == 0:
                 reroll_shop()
 
         # ── Reset mouse ──
