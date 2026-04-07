@@ -30,11 +30,12 @@ Vec4.setup_screen(x, Y_OFF, W, EFF_H); Vec2.setup_screen(x, Y_OFF, W, EFF_H)
 pyautogui.FAILSAFE = False
 
 # ── Coords ──
-BUY = [b.get_coords() for b in screen_coords.BUY_LOC]
+# Hardcoded coords from actual game screenshots (1728x1002 window)
+BUY = [(430, 750), (610, 750), (790, 750), (970, 750), (1150, 750)]
+BUY_XP = (325, 750)
+REROLL = (325, 785)
 BENCH = [b.get_coords() for b in screen_coords.BENCH_LOC]
 BOARD = [b.get_coords() for b in screen_coords.BOARD_LOC]
-BUY_XP = screen_coords.BUY_XP_LOC.get_coords()
-REROLL = screen_coords.REFRESH_LOC.get_coords()
 DEFAULT = screen_coords.DEFAULT_LOC.get_coords()
 AUG_LOC = [a.get_coords() for a in screen_coords.AUGMENT_LOC]
 ALL_C = set(game_assets.CHAMPIONS.keys())
