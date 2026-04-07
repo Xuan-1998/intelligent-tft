@@ -159,14 +159,21 @@ def handle_popup():
     return False
 
 def slam_items():
-    slots = [p[0].get_coords() for p in screen_coords.ITEM_POS]
+    # Absolute screen positions where item components sit on left hex grid
+    item_pos = [
+        (295, 290), (330, 275), (365, 290),
+        (280, 320), (315, 305), (350, 320),
+        (295, 350), (330, 335), (365, 350),
+        (315, 370),
+    ]
     targets = [BOARD[0], BOARD[1], BOARD[21], BOARD[22], BOARD[2], BOARD[23], BOARD[3], BOARD[24], BOARD[14], BOARD[25]]
-    for i, s in enumerate(slots):
+    for i, pos in enumerate(item_pos):
         t = targets[i % len(targets)]
-        pyautogui.moveTo(*s); time.sleep(0.03)
-        pyautogui.mouseDown(); time.sleep(0.03)
-        pyautogui.moveTo(*t, duration=0.08)
-        pyautogui.mouseUp(); time.sleep(0.05)
+        pyautogui.moveTo(*pos); time.sleep(0.2)
+        pyautogui.mouseDown(button='left'); time.sleep(0.3)
+        pyautogui.moveTo(*t, duration=0.4)
+        time.sleep(0.2)
+        pyautogui.mouseUp(button='left'); time.sleep(0.3)
 
 def scout_opponents():
     ts = time.strftime('%Y%m%d_%H%M%S')
@@ -180,6 +187,11 @@ def scout_opponents():
 
 # ═══ MAIN ═══
 print(f"═══ TFT Agent v7 | {GID} ═══")
+# Wait for game API
+for _w in range(30):
+    if api_level() > 0: break
+    print(f"  Waiting for game... ({_w*2}s)")
+    time.sleep(2)
 rnd = read_round(); lvl = api_level()
 stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
 
@@ -225,36 +237,21 @@ try:
         # ── Phase transitions ──
         if phase == "EARLY" and lvl >= 8:
             phase = "ROLLDOWN"
-            print(f"\n🎯 → ROLLDOWN (g={gold} lvl={lvl})")
+            print(f"\n🎯 → ROLLDOWN (lvl={lvl})")
             log("phase", phase="ROLLDOWN")
 
-        # ═══ EARLY: buy cheap comp units, preserve interest ═══
+        # ═══ EARLY: buy units, place them, slam items ═══
         if phase == "EARLY" and planning:
-            # Stage 1: buy ANY unit to survive PvE creeps
-            if stage <= 1:
-                for i in range(5): buy_slot(i)
-            else:
-                # Stage 2-3: only buy comp units, preserve interest
-                shop = read_shop()
-                for i, ch in enumerate(shop):
-                    if not ch: continue
-                    cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                    g = read_gold()
-                    if g < 0 or cost > g: continue
-                    floor = (g // 10) * 10
-                    if ch in comps.EARLY_GAME_BUYS and cost <= 2 and (g - cost) >= floor:
-                        buy_slot(i)
-                        print(f"  💰 {ch} ({cost}g)")
-                        log("buy", champ=ch, cost=cost)
+            # Just buy all 5 shop slots — game rejects if can't afford
+            for i in range(5): buy_slot(i)
 
-            # Buy XP in stage 3 if excess gold
-            if stage >= 3 and gold > 50 and lvl < 7:
-                for _ in range(2): buy_xp()
+            # Buy XP in stage 3+
+            if stage >= 3 and lvl < 7 and cycle % 3 == 0:
+                buy_xp(); buy_xp()
                 print(f"  📈 XP→{api_level()}")
 
-            if cycle % 4 == 0: place_bench_to_board()
-            if cycle % 6 == 0: slam_items()
-            # Skip scouting — too slow
+            if cycle % 3 == 0: place_bench_to_board()
+            if cycle % 4 == 0: slam_items()
 
         # ═══ ROLLDOWN: level 8, roll for carries ═══
         elif phase == "ROLLDOWN" and planning:
