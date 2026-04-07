@@ -8,25 +8,14 @@ import os; os.environ["PYTHONWARNINGS"] = "ignore"
 import time, sys
 import pyautogui
 import requests, urllib3; urllib3.disable_warnings()
-from pynput import keyboard
 from difflib import SequenceMatcher
 from vec4 import Vec4
 from vec2 import Vec2
 from game import find_league_window
 import screen_coords, ocr, mk_functions, game_assets, comps
 
-# ── Stop hotkey: Cmd+= ──
+# --- Stop: Ctrl+C ---
 RUNNING = True
-_keys = set()
-def _kp(key):
-    global RUNNING; _keys.add(key)
-    if keyboard.Key.cmd in _keys or keyboard.Key.cmd_r in _keys:
-        try:
-            if hasattr(key,'char') and key.char=='=':
-                RUNNING=False; print("\n🛑 Stopped"); return False
-        except: pass
-def _kr(key): _keys.discard(key)
-keyboard.Listener(on_press=_kp, on_release=_kr, daemon=True).start()
 
 # ── Window setup ──
 w = find_league_window()
