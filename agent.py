@@ -19,8 +19,13 @@ import screen_coords, ocr, game_assets, comps
 # ── Stop via Ctrl+C ──
 RUNNING = True
 
-# ── Window ──
-w = find_league_window()
+# ── Window (retry up to 30s) ──
+w = None
+for _retry in range(15):
+    w = find_league_window()
+    if w: break
+    print(f"  Waiting for game window... ({_retry*2}s)")
+    time.sleep(2)
 if not w: print("NO GAME WINDOW"); sys.exit(1)
 x, y, W, H = w
 Y_OFF = y + round(H * 0.028)
@@ -172,12 +177,24 @@ def handle_popup():
     return False
 
 # ── Target lists ──
-# "Strongest board" strategy: buy good units at every cost tier
-# Early: any 1-2 cost unit (build pairs for upgrades)
-# Mid: any 2-3 cost unit
-# Rolldown: any 3-4-5 cost unit
-ALWAYS_BUY = set(game_assets.CHAMPIONS.keys())  # buy everything the game offers
+ALWAYS_BUY = set(game_assets.CHAMPIONS.keys())
 EARLY_CHEAP = {n for n, d in game_assets.CHAMPIONS.items() if d.get("Gold", 99) <= 2}
+
+# ── Item slamming ──
+ITEM_SLOTS = [p[0].get_coords() for p in screen_coords.ITEM_POS]
+# Board positions to slam items onto (carries first, then tanks)
+SLAM_TARGETS = [BOARD[14], BOARD[0], BOARD[24], BOARD[25]]
+
+def slam_items():
+    """Drag every item bench slot onto a carry. Game auto-combines components."""
+    for i, ipos in enumerate(ITEM_SLOTS):
+        target = SLAM_TARGETS[i % len(SLAM_TARGETS)]
+        pyautogui.moveTo(*ipos); time.sleep(0.05)
+        pyautogui.mouseDown(); time.sleep(0.05)
+        pyautogui.moveTo(*target, duration=0.1)
+        pyautogui.mouseUp(); time.sleep(0.1)
+    pyautogui.moveTo(*DEFAULT)
+    print("  🔧 Items slammed")
 
 # ═══ MAIN ═══
 print(f"═══ TFT Agent v5 | {GID} ═══")
@@ -297,29 +314,17 @@ try:
             log("rolldown", found=found)
             rolldown_done = True
 
-        # ═══ LATEGAME: opportunistic buys + level 9 ═══
+        # ═══ LATEGAME: blind-buy all, place, occasional reroll ═══
         elif phase == "LATEGAME":
-            shop = read_shop()
-            bought_this_cycle = []
-            for i, ch in enumerate(shop):
-                if not ch: continue
-                cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                # Only buy if it's a target unit (not just any expensive unit)
-                if ch in ALWAYS_BUY:
-                    buy_slot(i)
-                    bought_this_cycle.append(ch)
-                    print(f"  ⬆️ {ch} ({cost}g)")
-                    log("buy", champ=ch, cost=cost)
+            for i in range(5):
+                buy_slot(i)
 
-            if bought_this_cycle and cycle - last_place_cycle >= 2:
+            if cycle % 3 == 0:
                 place_bench_to_board()
-                last_place_cycle = cycle
 
-            # Try to level to 9 occasionally
             if level < 9 and cycle % 8 == 0:
                 buy_xp()
 
-            # Reroll less aggressively
             if cycle % 6 == 0:
                 reroll_shop()
 
