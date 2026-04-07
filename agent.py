@@ -176,15 +176,15 @@ def scout_opponents():
 
 # ═══ MAIN ═══
 print(f"═══ TFT Agent v7 | {GID} ═══")
-rnd = read_round(); lvl = api_level(); gold = read_gold()
+rnd = read_round(); lvl = api_level()
 stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
 
 if stage >= 5 or lvl >= 8: phase = "LATEGAME"
 elif stage >= 4 or lvl >= 6: phase = "ROLLDOWN"
 else: phase = "EARLY"
 
-print(f"Start: R{rnd} G:{gold} Lvl:{lvl} → {phase}")
-log("startup", round=rnd, gold=gold, level=lvl, phase=phase)
+print(f"Start: R{rnd} Lvl:{lvl} → {phase}")
+log("startup", round=rnd, level=lvl, phase=phase)
 
 last_rnd = ""; cycle = 0; start = time.time(); scouted = False
 
@@ -227,12 +227,26 @@ try:
 
         # ═══ EARLY: buy cheap comp units, preserve interest ═══
         if phase == "EARLY" and planning:
-            # Buy all 5 shop slots blindly — game rejects if can't afford
-            for i in range(5): buy_slot(i)
+            # Stage 1: buy ANY unit to survive PvE creeps
+            if stage <= 1:
+                for i in range(5): buy_slot(i)
+            else:
+                # Stage 2-3: only buy comp units, preserve interest
+                shop = read_shop()
+                for i, ch in enumerate(shop):
+                    if not ch: continue
+                    cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
+                    g = read_gold()
+                    if g < 0 or cost > g: continue
+                    floor = (g // 10) * 10
+                    if ch in comps.EARLY_GAME_BUYS and cost <= 2 and (g - cost) >= floor:
+                        buy_slot(i)
+                        print(f"  💰 {ch} ({cost}g)")
+                        log("buy", champ=ch, cost=cost)
 
-            # Buy XP once per round in stage 3
-            if stage >= 3 and lvl < 7 and cycle % 8 == 0:
-                buy_xp()
+            # Buy XP in stage 3 if excess gold
+            if stage >= 3 and gold > 50 and lvl < 7:
+                for _ in range(2): buy_xp()
                 print(f"  📈 XP→{api_level()}")
 
             if cycle % 4 == 0: place_bench_to_board()
