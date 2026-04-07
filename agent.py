@@ -1,6 +1,6 @@
 #!/usr/bin/env python3 -u
-"""TFT Agent v6 — Fast 8 strategy: save gold → level to 8 → roll down.
-No rolling or buying before level 8. Press Ctrl+C to stop.
+"""TFT Agent v6 — disciplined econ, proper placement, full game loop.
+Press Ctrl+C to stop.
 """
 import warnings; warnings.filterwarnings("ignore")
 import os, sys, json, time, re
@@ -17,19 +17,16 @@ import screen_coords, ocr, game_assets, comps
 
 RUNNING = True
 
-# ── Window (retry up to 30s) ──
+# ── Window ──
 w = None
-for _retry in range(15):
+for _r in range(15):
     w = find_league_window()
     if w: break
-    print(f"  Waiting for game window... ({_retry*2}s)")
     time.sleep(2)
 if not w: print("NO GAME WINDOW"); sys.exit(1)
 x, y, W, H = w
-Y_OFF = y + round(H * 0.028)
-EFF_H = H - round(H * 0.028)
-Vec4.setup_screen(x, Y_OFF, W, EFF_H)
-Vec2.setup_screen(x, Y_OFF, W, EFF_H)
+Y_OFF = y + round(H * 0.028); EFF_H = H - round(H * 0.028)
+Vec4.setup_screen(x, Y_OFF, W, EFF_H); Vec2.setup_screen(x, Y_OFF, W, EFF_H)
 pyautogui.FAILSAFE = False
 
 # ── Coords ──
@@ -41,13 +38,14 @@ REROLL = screen_coords.REFRESH_LOC.get_coords()
 DEFAULT = screen_coords.DEFAULT_LOC.get_coords()
 AUG_LOC = [a.get_coords() for a in screen_coords.AUGMENT_LOC]
 ALL_C = set(game_assets.CHAMPIONS.keys())
+GOLD_BOX = (830, 845, 890, 885)
 
 # ── Logging ──
 LOG_DIR = os.path.expanduser("~/intelligent-tft/game_logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 GID = time.strftime("%Y%m%d_%H%M%S")
 LOG = []
-HISTORY_FILE = os.path.expanduser("~/intelligent-tft/game_history.jsonl")
+HISTORY = os.path.expanduser("~/intelligent-tft/game_history.jsonl")
 
 def log(ev, **kw):
     LOG.append({"t": time.strftime("%H:%M:%S"), "ev": ev, **kw})
@@ -56,28 +54,23 @@ def log(ev, **kw):
         except: pass
 
 def save_log():
-    with open(f"{LOG_DIR}/{GID}_log.json", "w") as f:
-        json.dump(LOG, f, indent=1)
+    with open(f"{LOG_DIR}/{GID}_log.json", "w") as f: json.dump(LOG, f, indent=1)
 
-def save_history(placement):
-    with open(HISTORY_FILE, "a") as f:
-        f.write(json.dumps({"time": time.strftime("%Y-%m-%d %H:%M"), "gid": GID,
-                             "placement": placement, "events": len(LOG)}) + "\n")
+def save_history(p):
+    with open(HISTORY, "a") as f:
+        f.write(json.dumps({"time": time.strftime("%Y-%m-%d %H:%M"), "gid": GID, "placement": p}) + "\n")
 
 # ── API ──
-def api_data():
-    try:
-        return requests.get("https://127.0.0.1:2999/liveclientdata/allgamedata",
-                            timeout=3, verify=False).json()
+def api():
+    try: return requests.get("https://127.0.0.1:2999/liveclientdata/allgamedata", timeout=3, verify=False).json()
     except: return None
 
 def api_level():
-    d = api_data()
-    return int(d["activePlayer"]["level"]) if d else -1
+    d = api(); return int(d["activePlayer"]["level"]) if d else -1
 
 def api_alive():
-    d = api_data()
-    if d is None: return False, 8
+    d = api()
+    if not d: return False, 8
     me = d["activePlayer"].get("riotIdGameName", "")
     for p in d["allPlayers"]:
         if p.get("riotIdGameName") == me and p.get("isDead"):
@@ -87,14 +80,20 @@ def api_alive():
 # ── OCR ──
 def fuzzy(t):
     if not t or len(t) < 2: return None
-    best, score = None, 0
+    best, sc = None, 0
     for n in ALL_C:
-        sc = SequenceMatcher(None, t.lower(), n.lower()).ratio()
-        if sc > score: best, score = n, sc
-    return best if score >= 0.55 else None
+        s = SequenceMatcher(None, t.lower(), n.lower()).ratio()
+        if s > sc: best, sc = n, s
+    return best if sc >= 0.55 else None
+
+def read_gold():
+    try:
+        t = ocr.get_text(GOLD_BOX, 3, 7, '0123456789')
+        return int(t) if t and t.isdigit() else -1
+    except: return -1
 
 def read_round():
-    for box in [(640, 72, 740, 102), (640, 75, 740, 100), (650, 75, 730, 100)]:
+    for box in [(640, 72, 740, 102), (650, 75, 730, 100)]:
         try:
             t = ocr.get_text(box, 3, 7, ocr.ROUND_WHITELIST)
             m = re.search(r'([1-7])-([1-7])', t or "")
@@ -108,205 +107,167 @@ def read_shop():
         names = []
         for p in screen_coords.CHAMP_NAME_POS:
             cp = p.get_coords()
-            t = ocr.get_text((sp[0]+cp[0], sp[1]+cp[1], sp[0]+cp[2], sp[1]+cp[3]),
-                             3, 7, ocr.ALPHABET_WHITELIST)
+            t = ocr.get_text((sp[0]+cp[0], sp[1]+cp[1], sp[0]+cp[2], sp[1]+cp[3]), 3, 7, ocr.ALPHABET_WHITELIST)
             names.append(fuzzy(t))
         return names
-    except: return [None] * 5
+    except: return [None]*5
 
 def detect_popup():
     try:
         img = ocr._grab((0, 33, 1728, 1035))
         a = list(img.crop((500, 130, 1200, 180)).getdata())
-        if sum(1 for p in a if p[0]>200 and p[1]>200 and p[2]>200) > len(a)*0.1:
-            return "god"
+        if sum(1 for p in a if p[0]>200 and p[1]>200 and p[2]>200) > len(a)*0.1: return "god"
         a2 = list(img.crop((400, 180, 600, 230)).getdata())
-        if sum(1 for p in a2 if p[0]>180 and p[1]>180 and p[2]>180) > len(a2)*0.08:
-            return "augment"
+        if sum(1 for p in a2 if p[0]>180 and p[1]>180 and p[2]>180) > len(a2)*0.08: return "augment"
     except: pass
     return None
 
 # ── Actions ──
-def click(cx, cy, delay=0.15):
-    pyautogui.click(cx, cy); time.sleep(delay)
-
-def buy_slot(i):
-    click(*BUY[i], 0.25)
-
-def buy_xp():
-    click(*BUY_XP, 0.15)
-
-def reroll_shop():
-    click(*REROLL, 0.2)
+def buy_slot(i): pyautogui.click(*BUY[i]); time.sleep(0.25)
+def buy_xp(): pyautogui.click(*BUY_XP); time.sleep(0.15)
+def reroll_shop(): pyautogui.click(*REROLL); time.sleep(0.2)
 
 def place_bench_to_board():
-    """Front row 21-27 (y=423) = tanks, Back row 0-6 (y=651) = carries"""
-    level = api_level()
-    if level <= 0: level = 8
-    positions = [21, 22, 23, 24, 0, 1, 2, 3, 14]
-    for i in range(min(9, level)):
+    """Tanks front (21-27), carries back (0-6)"""
+    lvl = api_level()
+    if lvl <= 0: lvl = 8
+    pos = [21, 22, 23, 24, 0, 1, 2, 3, 14]
+    for i in range(min(9, lvl)):
         pyautogui.click(*BENCH[i]); time.sleep(0.3)
-        pyautogui.click(*BOARD[positions[i]]); time.sleep(0.3)
+        pyautogui.click(*BOARD[pos[i]]); time.sleep(0.3)
 
 def pickup_loot():
-    y_start = Y_OFF + int(EFF_H * 0.30)
-    y_end = Y_OFF + int(EFF_H * 0.60)
-    x_start = x + int(W * 0.30)
-    x_end = x + int(W * 0.70)
-    for ly in range(y_start, y_end, 80):
-        for lx in range(x_start, x_end, 100):
+    for ly in range(Y_OFF + int(EFF_H*0.25), Y_OFF + int(EFF_H*0.65), 70):
+        for lx in range(x + int(W*0.25), x + int(W*0.75), 90):
             pyautogui.rightClick(lx, ly); time.sleep(0.01)
 
 def handle_popup():
-    popup = detect_popup()
-    if popup == "god":
-        print("  🔮 God → left")
-        click(int(W * 0.30), int(Y_OFF + EFF_H * 0.25), 2)
+    p = detect_popup()
+    if p == "god":
+        print("  🔮 God → left"); pyautogui.click(int(W*0.30), int(Y_OFF+EFF_H*0.25)); time.sleep(2)
         log("god"); return True
-    if popup == "augment":
-        print("  ⭐ Augment → first")
-        click(*AUG_LOC[0], 2)
+    if p == "augment":
+        print("  ⭐ Augment → first"); pyautogui.click(*AUG_LOC[0]); time.sleep(2)
         log("augment"); return True
     return False
 
-ITEM_SLOTS = [p[0].get_coords() for p in screen_coords.ITEM_POS]
-SLAM_TARGETS = [BOARD[14], BOARD[0], BOARD[24], BOARD[25]]
-
 def slam_items():
-    for i, ipos in enumerate(ITEM_SLOTS):
-        target = SLAM_TARGETS[i % len(SLAM_TARGETS)]
-        pyautogui.moveTo(*ipos); time.sleep(0.05)
+    slots = [p[0].get_coords() for p in screen_coords.ITEM_POS]
+    targets = [BOARD[0], BOARD[1], BOARD[14], BOARD[21]]
+    for i, s in enumerate(slots):
+        t = targets[i % len(targets)]
+        pyautogui.moveTo(*s); time.sleep(0.05)
         pyautogui.mouseDown(); time.sleep(0.05)
-        pyautogui.moveTo(*target, duration=0.1)
-        pyautogui.mouseUp(); time.sleep(0.1)
-    pyautogui.moveTo(*DEFAULT)
+        pyautogui.moveTo(*t, duration=0.1); pyautogui.mouseUp(); time.sleep(0.1)
 
 # ═══ MAIN ═══
-print(f"═══ TFT Agent v6 — Fast 8 | {GID} ═══")
-print(f"Window: {W}x{H} at ({x},{y})")
-
-level = api_level()
-rnd = read_round()
+print(f"═══ TFT Agent v6 | {GID} ═══")
+rnd = read_round(); lvl = api_level(); gold = read_gold()
 stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
 
-# Phase detection on startup
-if level >= 8:
-    phase = "ROLLDOWN"
-elif stage >= 3 or level >= 5:
-    phase = "LEVELING"
-else:
-    phase = "EARLY"
+if stage >= 5 or lvl >= 8: phase = "LATEGAME"
+elif stage >= 4 or lvl >= 6: phase = "ROLLDOWN"
+else: phase = "EARLY"
 
-print(f"Start: R{rnd} Lvl:{level} → {phase}")
-log("startup", round=rnd, level=level, phase=phase)
+print(f"Start: R{rnd} G:{gold} Lvl:{lvl} → {phase}")
+log("startup", round=rnd, gold=gold, level=lvl, phase=phase)
 
-last_rnd = ""
-cycle = 0
-start_time = time.time()
-rolldown_done = False
+last_rnd = ""; cycle = 0; start_time = time.time()
 
 try:
     while RUNNING:
         alive, placement = api_alive()
         if not alive:
-            print(f"\n☠️ Game over! Placement: {placement}")
-            log("game_over", placement=placement)
-            save_history(placement)
-            break
+            print(f"\n☠️ Placement: {placement}")
+            log("game_over", placement=placement); save_history(placement); break
 
-        level = api_level()
-        rnd = read_round()
-        stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
+        lvl = api_level(); gold = read_gold()
+        rnd = read_round(); stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
 
         if rnd and rnd != last_rnd:
-            elapsed = int(time.time() - start_time)
-            print(f"\n[R{rnd}] Lvl:{level} {phase} ({elapsed}s)")
-            log("round", round=rnd, level=level, phase=phase)
+            print(f"\n[R{rnd}] G:{gold} Lvl:{lvl} {phase} ({int(time.time()-start_time)}s)")
+            log("round", round=rnd, gold=gold, level=lvl, phase=phase)
             last_rnd = rnd
 
         if handle_popup():
-            time.sleep(2); cycle += 1; continue
+            time.sleep(1); pickup_loot(); cycle += 1; continue
 
-        if cycle % 10 == 0:
-            pickup_loot()
+        if cycle % 10 == 0 and cycle > 0: pickup_loot()
 
         # ── Phase transitions ──
-        if phase == "EARLY" and (stage >= 3 or level >= 4):
-            phase = "LEVELING"
-            print(f"\n📈 → LEVELING")
-            log("phase", phase="LEVELING")
-
-        if phase == "LEVELING" and level >= 8:
+        if phase == "EARLY" and stage >= 4:
             phase = "ROLLDOWN"
-            print(f"\n🎯 → ROLLDOWN (lvl 8!)")
+            print(f"\n🎯 → ROLLDOWN (g={gold} lvl={lvl})")
             log("phase", phase="ROLLDOWN")
-            rolldown_done = False
 
-        if phase == "ROLLDOWN" and rolldown_done:
-            phase = "LATEGAME"
-            print(f"\n🏆 → LATEGAME")
-
-        # ═══ EARLY (stage 1-2): do nothing, save gold ═══
+        # ═══ EARLY (stages 1-3): PURE ECON ═══
+        # Only buy 1-cost units from our comp, never break interest thresholds
         if phase == "EARLY":
-            # Place whatever we got from carousel/PvE
-            if cycle % 5 == 0:
-                place_bench_to_board()
+            if gold >= 0:
+                shop = read_shop()
+                for i, ch in enumerate(shop):
+                    if not ch: continue
+                    cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
+                    if cost > gold: continue
+                    # Only 1-cost from early game list, preserve interest (multiples of 10)
+                    interest_floor = (gold // 10) * 10
+                    if ch in comps.EARLY_GAME_BUYS and cost == 1 and (gold - cost) >= interest_floor:
+                        buy_slot(i); gold -= cost
+                        print(f"  💰 {ch} ({cost}g) [g→{gold}]")
+                        log("buy", champ=ch, cost=cost, gold_after=gold)
 
-        # ═══ LEVELING: spend ALL gold on XP, no buying, no rolling ═══
-        elif phase == "LEVELING":
-            buy_xp()
-            if cycle % 5 == 0:
-                print(f"  📈 XP (lvl {level})")
-                place_bench_to_board()
+            if cycle % 4 == 0: place_bench_to_board()
 
-        # ═══ ROLLDOWN: at level 8, roll and buy 3+ cost units ═══
-        elif phase == "ROLLDOWN" and not rolldown_done:
-            # Roll and buy
+        # ═══ ROLLDOWN (stage 4): level to 8, roll for carries ═══
+        elif phase == "ROLLDOWN":
+            # Level to 8
+            ct = 0
+            while RUNNING and api_level() < 8 and ct < 30:
+                buy_xp(); ct += 1; time.sleep(0.15)
+                if read_gold() <= 0: break
+            print(f"  Leveled to {api_level()}")
+
+            # Roll and buy carries + any 4/5-cost
+            targets = comps.ROLLDOWN_BUYS | comps.EARLY_GAME_BUYS
             found = []
             for roll in range(25):
                 if not RUNNING: break
+                g = read_gold()
+                if g >= 0 and g < 10: break
                 reroll_shop()
                 shop = read_shop()
                 for i, ch in enumerate(shop):
                     if not ch: continue
                     cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                    # Only buy 3+ cost units at level 8
-                    if cost >= 3:
-                        buy_slot(i)
-                        found.append(ch)
+                    if ch in targets or cost >= 4:
+                        buy_slot(i); found.append(ch)
                         print(f"  🎯 {ch} ({cost}g)")
                         log("buy", champ=ch, cost=cost)
 
-            place_bench_to_board()
-            slam_items()
-            print(f"  Rolldown: {len(found)} units")
+            place_bench_to_board(); slam_items()
+            print(f"  Rolldown done: {found}")
             log("rolldown", found=found)
-            rolldown_done = True
+            phase = "LATEGAME"
+            print(f"\n🏆 → LATEGAME")
 
-        # ═══ LATEGAME: buy 3+ cost, occasional reroll ═══
+        # ═══ LATEGAME: slow roll for upgrades ═══
         elif phase == "LATEGAME":
-            if cycle % 3 == 0:
+            g = read_gold()
+            if g > 30:
                 reroll_shop()
                 shop = read_shop()
                 for i, ch in enumerate(shop):
                     if not ch: continue
                     cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                    if cost >= 3:
-                        buy_slot(i)
-                        print(f"  ⬆️ {ch} ({cost}g)")
-                        log("buy", champ=ch, cost=cost)
+                    if cost >= 3: buy_slot(i); print(f"  ⬆️ {ch}")
                 place_bench_to_board()
+            if g > 50 and lvl < 9: buy_xp()
+            if cycle % 8 == 0: slam_items()
 
-            if level < 9 and cycle % 10 == 0:
-                buy_xp()
-
-        pyautogui.moveTo(*DEFAULT)
-        cycle += 1
-        time.sleep(1.0)
+        pyautogui.moveTo(*DEFAULT); cycle += 1; time.sleep(1.2)
 
 except KeyboardInterrupt:
     print("\n🛑 Stopped")
 finally:
     save_log()
-    elapsed = int(time.time() - start_time)
-    print(f"📝 {LOG_DIR}/{GID}_log.json ({len(LOG)} events, {elapsed}s)")
+    print(f"📝 {LOG_DIR}/{GID}_log.json ({len(LOG)} events, {int(time.time()-start_time)}s)")
