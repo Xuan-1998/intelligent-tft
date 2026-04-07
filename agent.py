@@ -68,12 +68,16 @@ def api():
     except: return None
 
 def api_level():
-    d = api(); return int(d["activePlayer"]["level"]) if d else -1
+    d = api()
+    try: return int(d["activePlayer"]["level"])
+    except: return -1
 
 def api_alive():
     d = api()
     if not d: return False, 8
-    me = d["activePlayer"].get("riotIdGameName", "")
+    try:
+        me = d["activePlayer"].get("riotIdGameName", "")
+    except: return False, 8
     for p in d["allPlayers"]:
         if p.get("riotIdGameName") == me and p.get("isDead"):
             return False, sum(1 for pl in d["allPlayers"] if not pl.get("isDead")) + 1
@@ -102,7 +106,8 @@ def read_round():
     return ""
 
 def is_planning():
-    return read_gold() >= 0
+    """Planning = always try to act. Game ignores clicks during combat anyway."""
+    return True
 
 def read_shop():
     try:
@@ -139,9 +144,9 @@ def place_bench_to_board():
         pyautogui.click(*BOARD[pos[i]]); time.sleep(0.12)
 
 def pickup_loot():
-    for ly in range(Y_OFF + int(EFF_H*0.30), Y_OFF + int(EFF_H*0.60), 90):
-        for lx in range(x + int(W*0.30), x + int(W*0.70), 110):
-            pyautogui.rightClick(lx, ly); time.sleep(0.008)
+    for ly in range(Y_OFF + int(EFF_H*0.20), Y_OFF + int(EFF_H*0.65), 60):
+        for lx in range(x + int(W*0.20), x + int(W*0.80), 80):
+            pyautogui.rightClick(lx, ly); time.sleep(0.05)
 
 def handle_popup():
     p = detect_popup()
@@ -178,8 +183,7 @@ print(f"═══ TFT Agent v7 | {GID} ═══")
 rnd = read_round(); lvl = api_level()
 stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
 
-if stage >= 5 or lvl >= 8: phase = "LATEGAME"
-elif stage >= 4 or lvl >= 6: phase = "ROLLDOWN"
+if lvl >= 8: phase = "ROLLDOWN"
 else: phase = "EARLY"
 
 print(f"Start: R{rnd} Lvl:{lvl} → {phase}")
@@ -219,7 +223,7 @@ try:
         planning = is_planning()
 
         # ── Phase transitions ──
-        if phase == "EARLY" and (stage >= 4 or lvl >= 7):
+        if phase == "EARLY" and lvl >= 8:
             phase = "ROLLDOWN"
             print(f"\n🎯 → ROLLDOWN (g={gold} lvl={lvl})")
             log("phase", phase="ROLLDOWN")
