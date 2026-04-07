@@ -145,11 +145,14 @@ def reroll_shop():
     click(*REROLL, 0.2)
 
 def place_bench_to_board():
+    """Move bench units to board using click-click with proper delays"""
     for i in range(9):
-        pyautogui.moveTo(*BENCH[i]); time.sleep(0.03)
-        pyautogui.mouseDown(); time.sleep(0.03)
-        pyautogui.moveTo(*BOARD[21 + (i % 7)], duration=0.08)
-        pyautogui.mouseUp(); time.sleep(0.08)
+        # Click bench slot to pick up
+        pyautogui.click(*BENCH[i])
+        time.sleep(0.3)
+        # Click board slot to place
+        pyautogui.click(*BOARD[21 + (i % 7)])
+        time.sleep(0.3)
 
 def pickup_loot():
     for ly in range(300, 650, 60):
