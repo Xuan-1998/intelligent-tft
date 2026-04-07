@@ -173,11 +173,12 @@ def handle_popup():
     return False
 
 # ── Target lists ──
-# Everything we want to buy, by priority
-ALWAYS_BUY = comps.ROLLDOWN_BUYS | comps.EARLY_GAME_BUYS
-# Cheap units good for early board
-EARLY_CHEAP = {n for n in comps.EARLY_GAME_BUYS
-               if game_assets.CHAMPIONS.get(n, {}).get("Gold", 99) <= 2}
+# "Strongest board" strategy: buy good units at every cost tier
+# Early: any 1-2 cost unit (build pairs for upgrades)
+# Mid: any 2-3 cost unit
+# Rolldown: any 3-4-5 cost unit
+ALWAYS_BUY = set(game_assets.CHAMPIONS.keys())  # buy everything the game offers
+EARLY_CHEAP = {n for n, d in game_assets.CHAMPIONS.items() if d.get("Gold", 99) <= 2}
 
 # ═══ MAIN ═══
 print(f"═══ TFT Agent v5 | {GID} ═══")
@@ -243,23 +244,23 @@ try:
             phase = "LATEGAME"
             print(f"\n🏆 → LATEGAME")
 
-        # ═══ EARLY: econ first, buy 1-cost only, every 2 cycles ═══
+        # ═══ EARLY: buy 1-2 cost units, build pairs ═══
         if phase == "EARLY":
-            if cycle % 2 == 0:
-                shop = read_shop()
-                bought = False
-                for i, ch in enumerate(shop):
-                    if not ch: continue
-                    cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                    if ch in EARLY_CHEAP and cost <= 1:
-                        buy_slot(i)
-                        bought = True
-                        print(f"  💰 {ch} ({cost}g)")
-                        log("buy", champ=ch, cost=cost)
+            shop = read_shop()
+            bought = False
+            for i, ch in enumerate(shop):
+                if not ch: continue
+                cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
+                # Buy any 1-2 cost unit — pairs upgrade to 2-star
+                if cost <= 2:
+                    buy_slot(i)
+                    bought = True
+                    print(f"  💰 {ch} ({cost}g)")
+                    log("buy", champ=ch, cost=cost)
 
-                if bought or (cycle - last_place_cycle >= 6):
-                    place_bench_to_board()
-                    last_place_cycle = cycle
+            if bought or (cycle - last_place_cycle >= 6):
+                place_bench_to_board()
+                last_place_cycle = cycle
 
             # Buy XP sparingly in stage 3
             if stage >= 3 and level < 6 and cycle % 6 == 0:
