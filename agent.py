@@ -223,9 +223,9 @@ try:
             log("round", round=rnd, level=level, phase=phase)
             last_rnd = rnd
 
-        # ── Always handle popups ──
+        # ── Handle popups (with cooldown) ──
         if handle_popup():
-            time.sleep(1); pickup_loot()
+            time.sleep(2)
             cycle += 1; continue
 
         # ── Pick up loot every 10 cycles ──
@@ -243,21 +243,15 @@ try:
             phase = "LATEGAME"
             print(f"\n🏆 → LATEGAME")
 
-        # ═══ EARLY: buy 1-2 cost units, build pairs ═══
+        # ═══ EARLY: buy everything ≤2g, place units ═══
         if phase == "EARLY":
-            shop = read_shop()
-            bought = False
-            for i, ch in enumerate(shop):
-                if not ch: continue
-                cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                # Buy any 1-2 cost unit — pairs upgrade to 2-star
-                if cost <= 2:
-                    buy_slot(i)
-                    bought = True
-                    print(f"  💰 {ch} ({cost}g)")
-                    log("buy", champ=ch, cost=cost)
+            # Just click all 5 buy slots — game rejects if can't afford
+            for i in range(5):
+                buy_slot(i)
+            print(f"  🛒 bought (cycle {cycle})")
+            log("buy_all", phase="EARLY")
 
-            if bought or (cycle - last_place_cycle >= 4):
+            if cycle % 3 == 0:
                 place_bench_to_board()
                 last_place_cycle = cycle
 
