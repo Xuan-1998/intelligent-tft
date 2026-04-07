@@ -31,9 +31,9 @@ pyautogui.FAILSAFE = False
 
 # ── Coords ──
 # Hardcoded coords from actual game screenshots (1728x1002 window)
-BUY = [(430, 750), (610, 750), (790, 750), (970, 750), (1150, 750)]
-BUY_XP = (325, 750)
-REROLL = (325, 785)
+BUY = [(380, 920), (560, 920), (740, 920), (920, 920), (1100, 920)]
+BUY_XP = (220, 900)
+REROLL = (220, 950)
 BENCH = [b.get_coords() for b in screen_coords.BENCH_LOC]
 BOARD = [b.get_coords() for b in screen_coords.BOARD_LOC]
 DEFAULT = screen_coords.DEFAULT_LOC.get_coords()
