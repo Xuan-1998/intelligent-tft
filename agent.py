@@ -151,9 +151,14 @@ def place_bench_to_board():
         pyautogui.click(*BOARD[positions[i]]); time.sleep(0.3)
 
 def pickup_loot():
-    """Sweep the board for orbs"""
-    for ly in range(250, 700, 50):
-        for lx in range(350, 1450, 70):
+    """Sweep the board for orbs — STAY INSIDE game window"""
+    # Board area is roughly center of game window
+    y_start = Y_OFF + int(EFF_H * 0.25)
+    y_end = Y_OFF + int(EFF_H * 0.65)
+    x_start = x + int(W * 0.25)
+    x_end = x + int(W * 0.75)
+    for ly in range(y_start, y_end, 60):
+        for lx in range(x_start, x_end, 80):
             pyautogui.rightClick(lx, ly); time.sleep(0.015)
 
 def handle_popup():
@@ -239,24 +244,23 @@ try:
             phase = "LATEGAME"
             print(f"\n🏆 → LATEGAME")
 
-        # ═══ EARLY: econ first, buy only 1-cost from target list ═══
+        # ═══ EARLY: buy good units, place them ═══
         if phase == "EARLY":
-            # Only read shop + buy once every 2 cycles to avoid spam
-            if cycle % 2 == 0:
-                shop = read_shop()
-                bought = False
-                for i, ch in enumerate(shop):
-                    if not ch: continue
-                    cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                    if ch in EARLY_CHEAP and cost <= 1:
-                        buy_slot(i)
-                        bought = True
-                        print(f"  💰 {ch} ({cost}g)")
-                        log("buy", champ=ch, cost=cost)
+            shop = read_shop()
+            bought = False
+            for i, ch in enumerate(shop):
+                if not ch: continue
+                cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
+                # Buy any unit in our target list up to 3g
+                if (ch in ALWAYS_BUY and cost <= 3) or ch in EARLY_CHEAP:
+                    buy_slot(i)
+                    bought = True
+                    print(f"  💰 {ch} ({cost}g)")
+                    log("buy", champ=ch, cost=cost)
 
-                if bought or (cycle - last_place_cycle >= 6):
-                    place_bench_to_board()
-                    last_place_cycle = cycle
+            if bought or (cycle - last_place_cycle >= 4):
+                place_bench_to_board()
+                last_place_cycle = cycle
 
             # Buy XP sparingly in stage 3
             if stage >= 3 and level < 6 and cycle % 6 == 0:
