@@ -202,7 +202,7 @@ try:
             print(f"\n☠️ Placement: {placement}")
             log("game_over", placement=placement); save_history(placement); break
 
-        lvl = api_level(); gold = read_gold()
+        lvl = api_level()
         rnd = read_round(); stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
 
         if rnd and rnd != last_rnd:
