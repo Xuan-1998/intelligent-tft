@@ -155,12 +155,14 @@ def handle_popup():
 
 def slam_items():
     slots = [p[0].get_coords() for p in screen_coords.ITEM_POS]
-    targets = [BOARD[21], BOARD[22], BOARD[0], BOARD[1]]
+    targets = [BOARD[0], BOARD[1], BOARD[21], BOARD[22], BOARD[2], BOARD[23], BOARD[3], BOARD[24], BOARD[14], BOARD[25]]
     for i, s in enumerate(slots):
         t = targets[i % len(targets)]
-        pyautogui.moveTo(*s); time.sleep(0.05)
-        pyautogui.mouseDown(); time.sleep(0.05)
-        pyautogui.moveTo(*t, duration=0.1); pyautogui.mouseUp(); time.sleep(0.1)
+        pyautogui.moveTo(*s); time.sleep(0.15)
+        pyautogui.mouseDown(); time.sleep(0.15)
+        pyautogui.moveTo(*t, duration=0.25)
+        time.sleep(0.1)
+        pyautogui.mouseUp(); time.sleep(0.15)
 
 def scout_opponents():
     ts = time.strftime('%Y%m%d_%H%M%S')
@@ -206,8 +208,8 @@ try:
         rnd = read_round(); stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
 
         if rnd and rnd != last_rnd:
-            print(f"\n[R{rnd}] G:{gold} Lvl:{lvl} {phase} ({int(time.time()-start)}s)")
-            log("round", round=rnd, gold=gold, level=lvl, phase=phase)
+            print(f"\n[R{rnd}] Lvl:{lvl} {phase} ({int(time.time()-start)}s)")
+            log("round", round=rnd, level=lvl, phase=phase)
             last_rnd = rnd; scouted = False
 
         if handle_popup():
@@ -225,21 +227,12 @@ try:
 
         # ═══ EARLY: buy cheap comp units, preserve interest ═══
         if phase == "EARLY" and planning:
-            shop = read_shop()
-            for i, ch in enumerate(shop):
-                if not ch: continue
-                cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                g = read_gold()
-                if g < 0 or cost > g: continue
-                floor = (g // 10) * 10
-                if ch in comps.EARLY_GAME_BUYS and cost <= 2 and (g - cost) >= floor:
-                    buy_slot(i)
-                    print(f"  💰 {ch} ({cost}g)")
-                    log("buy", champ=ch, cost=cost)
+            # Buy all 5 shop slots blindly — game rejects if can't afford
+            for i in range(5): buy_slot(i)
 
-            # XP only if excess gold (>50) in stage 3
-            if stage >= 3 and gold > 50 and lvl < 7:
-                for _ in range(2): buy_xp()
+            # Buy XP once per round in stage 3
+            if stage >= 3 and lvl < 7 and cycle % 8 == 0:
+                buy_xp()
                 print(f"  📈 XP→{api_level()}")
 
             if cycle % 4 == 0: place_bench_to_board()
@@ -251,46 +244,27 @@ try:
         elif phase == "ROLLDOWN" and planning:
             ct = 0
             while RUNNING and api_level() < 8 and ct < 40:
-                g = read_gold()
-                if g >= 0 and g < 4: break
-                buy_xp(); ct += 1; time.sleep(0.2)
+                buy_xp(); ct += 1; time.sleep(0.15)
             print(f"  Leveled to {api_level()}")
 
-            targets = comps.ROLLDOWN_BUYS | comps.EARLY_GAME_BUYS
-            found = []
-            for roll in range(25):
+            # Roll and blind-buy all slots 20 times
+            for roll in range(20):
                 if not RUNNING: break
-                g = read_gold()
-                if g >= 0 and g < 10: break
                 reroll_shop()
-                shop = read_shop()
-                for i, ch in enumerate(shop):
-                    if not ch: continue
-                    cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                    if ch in targets or cost >= 4:
-                        buy_slot(i); found.append(ch)
-                        print(f"  🎯 {ch} ({cost}g)")
-                        log("buy", champ=ch, cost=cost)
+                for i in range(5): buy_slot(i)
 
             place_bench_to_board(); slam_items()
-            print(f"  Rolldown: {found}")
-            log("rolldown", found=found)
+            print(f"  Rolldown done")
+            log("rolldown")
             phase = "LATEGAME"; print(f"\n🏆 → LATEGAME")
 
-        # ═══ LATEGAME: slow roll upgrades ═══
+        # ═══ LATEGAME: buy all, occasional reroll ═══
         elif phase == "LATEGAME" and planning:
-            g = read_gold()
-            if g > 30:
-                reroll_shop()
-                shop = read_shop()
-                for i, ch in enumerate(shop):
-                    if not ch: continue
-                    cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                    if cost >= 3: buy_slot(i); print(f"  ⬆️ {ch}")
-                place_bench_to_board()
-            if g > 50 and lvl < 9: buy_xp()
+            for i in range(5): buy_slot(i)
+            if cycle % 6 == 0: reroll_shop()
+            if cycle % 4 == 0: place_bench_to_board()
+            if lvl < 9 and cycle % 10 == 0: buy_xp()
             if cycle % 8 == 0: slam_items()
-            if not scouted: scout_opponents(); scouted = True
 
         pyautogui.moveTo(*DEFAULT); cycle += 1; time.sleep(1.5)
 
