@@ -92,13 +92,32 @@ def reroll(): mk_functions.left_click(screen_coords.REFRESH_LOC.get_coords()); t
 def buy_xp(): mk_functions.left_click(screen_coords.BUY_XP_LOC.get_coords()); time.sleep(0.15)
 
 def place_bench():
+    """Move bench units to board. 
+    In TFT: drag a bench champ to a board hex to place them.
+    If the hex is occupied, they swap. So we drag each bench slot
+    to specific board positions to fill the board."""
     lv=level()
+    # Drag each bench unit to a board position
     for i in range(min(9,lv)):
-        mk_functions.left_click(screen_coords.BENCH_LOC[i].get_coords()); time.sleep(0.08)
-        mk_functions.left_click(screen_coords.BOARD_LOC[21+(i%7)].get_coords()); time.sleep(0.08)
+        src = screen_coords.BENCH_LOC[i].get_coords()
+        # Place in back row positions first (21-27), then front row
+        pos = 21 + (i % 7)
+        dst = screen_coords.BOARD_LOC[pos].get_coords()
+        drag(src, dst)
 
 def sell_bench():
     for i in range(9): mk_functions.press_e(screen_coords.BENCH_LOC[i].get_coords()); time.sleep(0.04)
+
+def swap_bench_to_board():
+    """Drag ALL bench units onto board positions to swap/place them.
+    TFT auto-swaps if the position is occupied."""
+    print("  🔄 Swapping bench → board")
+    for i in range(9):
+        src = screen_coords.BENCH_LOC[i].get_coords()
+        # Alternate between different board positions
+        pos = 21 + (i % 7)
+        dst = screen_coords.BOARD_LOC[pos].get_coords()
+        drag(src, dst)
 
 def sweep_loot():
     """Right-click across entire board to pick up all orbs"""
@@ -194,7 +213,7 @@ try:
         # ═══ ECON PHASE ═══
         if phase=="ECON":
             b = buy(comps.EARLY_GAME_BUYS)
-            if b: print(f"  🛒 {b}"); place_bench()
+            if b: print(f"  🛒 {b}"); swap_bench_to_board()
             if g>54 and lv<5: buy_xp()
             if (g>=50 and lv>=5 and cycle>30) or (cycle>50):
                 phase="ROLLDOWN"; print("\n🚀 ROLLDOWN\n")
@@ -220,7 +239,7 @@ try:
             if g>30:
                 reroll()
                 b=buy(comps.ROLLDOWN_BUYS|comps.EARLY_GAME_BUYS)
-                if b: print(f"  ⬆ {b}"); place_bench()
+                if b: print(f"  ⬆ {b}"); swap_bench_to_board()
             if g>60 and lv<9: buy_xp()
 
         mk_functions.move_mouse(screen_coords.DEFAULT_LOC.get_coords())
