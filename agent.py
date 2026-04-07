@@ -106,7 +106,6 @@ def read_round():
     return ""
 
 def is_planning():
-    """Planning = always try to act. Game ignores clicks during combat anyway."""
     return True
 
 def read_shop():
