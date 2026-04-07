@@ -114,17 +114,26 @@ def drag(src,dst):
     pyautogui.mouseUp(); time.sleep(0.08)
 
 def equip_items():
-    """Drag items from item bench onto board carries"""
+    """In Set 17, items come from loot/popups and sit on bench champions or item slots.
+    To equip: items on the bench can be dragged to board champions.
+    We also need to handle the item component slots if they exist."""
     print("  🔧 Equipping items")
-    carries = [21,22,23,24,25,26]  # back row board positions
-    carry_coords = [screen_coords.BOARD_LOC[s].get_coords() for s in carries]
-    for i in range(min(10,len(screen_coords.ITEM_POS))):
-        src = screen_coords.ITEM_POS[i][0].get_coords()
-        dst = carry_coords[i%len(carry_coords)]
+    # Board carry positions (back row where our units should be)
+    carries = [screen_coords.BOARD_LOC[s].get_coords() for s in [21,22,23,24,25,26]]
+
+    # Try dragging from each bench slot to carries
+    # If a bench champ has items, clicking them picks up the item
+    for i in range(9):
+        src = screen_coords.BENCH_LOC[i].get_coords()
+        dst = carries[i % len(carries)]
         drag(src, dst)
 
 def click_popup():
-    """Click center to dismiss popups / collect rewards"""
+    """Click center to dismiss popups / collect rewards.
+    Also look for 'Take All' button from trait mechanics (Anima, etc)"""
+    # Take All button appears at ~57% x, ~71% y when trait popups show
+    pyautogui.click(int(W*0.57), int(Y_OFF+EFF_H*0.71)); time.sleep(0.3)
+    # Also click center
     pyautogui.click(W//2, Y_OFF+EFF_H//2); time.sleep(0.3)
 
 def click_left_option():
@@ -170,17 +179,16 @@ try:
 
         # ── Planning phase: act! ──
 
-        # Dismiss popups / god selection every few cycles
-        if cycle%12==0:
-            click_left_option(); time.sleep(0.3)
+        # Dismiss popups / Take All every 5 cycles
+        if cycle%5==0:
             click_popup()
 
-        # Loot sweep every 10 cycles
-        if cycle%10==0 and cycle>0:
+        # Loot sweep every 8 cycles
+        if cycle%8==0 and cycle>0:
             sweep_loot()
 
-        # Item equip every 12 cycles
-        if cycle%12==6:
+        # Item equip every 10 cycles
+        if cycle%10==5:
             equip_items()
 
         # ═══ ECON PHASE ═══
