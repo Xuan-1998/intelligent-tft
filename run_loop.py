@@ -1,197 +1,172 @@
 #!/usr/bin/env python3 -u
-"""
-TFT Autonomous Evolution Loop
-1. Click PLAY AGAIN / queue via LCU API
-2. Accept match
-3. Wait for game window
-4. Run agent.py
-5. Detect game end
-6. Review logs, repeat
+"""TFT Autonomous Evolution Loop — queue, play, review, repeat.
+Finds LCU credentials from process args. Handles full game lifecycle.
 """
 import warnings; warnings.filterwarnings("ignore")
-import os, sys, json, time, subprocess, signal
+import os, sys, json, time, subprocess, re
 os.environ["PYTHONWARNINGS"] = "ignore"
 
-import pyautogui
 import requests, urllib3; urllib3.disable_warnings()
 from requests.auth import HTTPBasicAuth
 
-pyautogui.FAILSAFE = False
-
-LEAGUE_PATH = '/Applications/League of Legends (PBE).app/Contents/LoL'
-HISTORY_FILE = os.path.expanduser('~/intelligent-tft/game_history.jsonl')
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+HISTORY_FILE = os.path.expanduser("~/intelligent-tft/game_history.jsonl")
 
 
-def get_client():
-    """Read LCU lockfile for auth token + port"""
+def get_lcu():
+    """Extract LCU auth token and port from running LeagueClient process."""
     try:
-        with open(os.path.join(LEAGUE_PATH, 'lockfile'), 'r') as f:
-            parts = f.read().split(':')
-            return parts[3], f"https://127.0.0.1:{parts[2]}"
+        out = subprocess.check_output(["ps", "aux"], text=True)
+        for line in out.split("\n"):
+            if "LeagueClientUx" in line and "--app-port=" in line:
+                port = re.search(r"--app-port=(\d+)", line)
+                token = re.search(r"--remoting-auth-token=(\S+)", line)
+                if port and token:
+                    return token.group(1), int(port.group(1))
     except:
-        return None, None
+        pass
+    return None, None
 
 
-def lcu(method, endpoint, token, url, data=None):
+def lcu_get(endpoint, token, port):
     try:
-        auth = HTTPBasicAuth('riot', token)
-        if method == 'post':
-            return requests.post(url + endpoint, json=data, auth=auth, timeout=10, verify=False)
-        return requests.get(url + endpoint, auth=auth, timeout=10, verify=False)
+        r = requests.get(f"https://127.0.0.1:{port}{endpoint}",
+                         auth=HTTPBasicAuth("riot", token), timeout=10, verify=False)
+        return r
     except:
         return None
 
 
-def game_api_alive():
-    """Check if in-game API is responding (= game is running)"""
+def lcu_post(endpoint, token, port, data=None):
     try:
-        r = requests.get('https://127.0.0.1:2999/liveclientdata/allgamedata', timeout=3, verify=False)
-        return r.status_code == 200
+        r = requests.post(f"https://127.0.0.1:{port}{endpoint}",
+                          json=data, auth=HTTPBasicAuth("riot", token), timeout=10, verify=False)
+        return r
     except:
-        return False
+        return None
 
 
-def get_gameflow_phase(token, url):
-    """Get current client phase: Lobby, Matchmaking, ReadyCheck, ChampSelect, InProgress, EndOfGame, None"""
-    r = lcu('get', '/lol-gameflow/v1/session', token, url)
+def get_phase(token, port):
+    r = lcu_get("/lol-gameflow/v1/session", token, port)
     if r and r.status_code == 200:
         return r.json().get("phase", "Unknown")
     return "None"
 
 
-def click_play_again():
-    """Click the PLAY AGAIN button on the end-of-game screen"""
-    print("  Clicking PLAY AGAIN...")
-    pyautogui.click(590, 683)
-    time.sleep(2)
-
-
-def queue_and_accept():
-    """Queue into a TFT game via LCU API"""
-    print("🎮 Queuing into TFT...")
-    token, url = None, None
-
-    # Wait for client
-    for _ in range(60):
-        token, url = get_client()
-        if token: break
-        print("  Waiting for client...")
-        time.sleep(5)
-    if not token:
-        print("❌ Client not found")
+def game_api_alive():
+    try:
+        r = requests.get("https://127.0.0.1:2999/liveclientdata/allgamedata",
+                          timeout=3, verify=False)
+        return r.status_code == 200
+    except:
         return False
 
-    phase = get_gameflow_phase(token, url)
+
+def queue_and_accept(token, port):
+    """Queue into TFT and accept match. Returns True when InProgress."""
+    phase = get_phase(token, port)
     print(f"  Client phase: {phase}")
 
-    if phase == "EndOfGame":
-        click_play_again()
-        time.sleep(3)
-        phase = get_gameflow_phase(token, url)
+    # If still in game (spectating after death), exit
+    if phase == "InProgress" and not game_api_alive():
+        # Game API down but client says InProgress = stuck spectating
+        # Just wait for it to end
+        print("  Waiting for game to fully end...")
+        for _ in range(120):
+            if get_phase(token, port) != "InProgress":
+                break
+            time.sleep(2)
+        phase = get_phase(token, port)
 
-    if phase in ("None", "Lobby", "Unknown"):
-        # Create TFT lobby
-        lcu('post', '/lol-lobby/v2/lobby/', token, url, {"queueId": 1090})
+    if phase == "InProgress" and game_api_alive():
+        print("  Already in game!")
+        return True
+
+    # Create TFT lobby if needed
+    if phase in ("None", "Lobby", "EndOfGame", "PreEndOfGame", "WaitingForStats", "Unknown"):
+        lcu_post("/lol-lobby/v2/lobby/", token, port, {"queueId": 1090})
         time.sleep(2)
-        # Start queue
-        lcu('post', '/lol-lobby/v2/lobby/matchmaking/search', token, url)
+
+    # Start queue
+    phase = get_phase(token, port)
+    if phase == "Lobby":
+        lcu_post("/lol-lobby/v2/lobby/matchmaking/search", token, port)
         print("  Queue started")
-        time.sleep(2)
+        time.sleep(1)
 
-    # Accept and wait for game (5 min timeout)
+    # Fast accept loop (5 min timeout)
     print("  Waiting for match...")
-    for i in range(300):
-        # Keep accepting
-        lcu('post', '/lol-matchmaking/v1/ready-check/accept', token, url)
+    for i in range(600):
+        lcu_post("/lol-matchmaking/v1/ready-check/accept", token, port)
+        phase = get_phase(token, port)
 
-        phase = get_gameflow_phase(token, url)
         if phase == "InProgress":
             print("  ✅ Game started!")
             return True
 
-        # If we fell out of queue, re-queue
+        # Re-queue if dropped
         if phase in ("None", "Lobby"):
-            lcu('post', '/lol-lobby/v2/lobby/', token, url, {"queueId": 1090})
-            time.sleep(2)
-            lcu('post', '/lol-lobby/v2/lobby/matchmaking/search', token, url)
+            lcu_post("/lol-lobby/v2/lobby/", token, port, {"queueId": 1090})
+            time.sleep(1)
+            lcu_post("/lol-lobby/v2/lobby/matchmaking/search", token, port)
 
-        time.sleep(1)
+        if i % 20 == 0 and i > 0:
+            print(f"  Still waiting... ({phase}, {i//2}s)")
 
-    print("❌ Queue timeout")
+        time.sleep(0.5)
+
+    print("  ❌ Queue timeout")
     return False
 
 
-def wait_for_game_window():
-    """Wait for the League game window to appear"""
-    print("  Waiting for game window...")
-    from game import find_league_window
-    for _ in range(90):
-        w = find_league_window()
-        if w:
-            print(f"  Window found: {w}")
+def wait_for_game_api():
+    """Wait for in-game API to come up (loading screen)."""
+    print("  Waiting for game to load...")
+    for i in range(90):
+        if game_api_alive():
+            print("  Game loaded!")
             return True
         time.sleep(2)
+    print("  ❌ Game API never came up")
     return False
 
 
 def run_agent():
-    """Run agent.py as subprocess, return when it exits"""
+    """Run agent.py, stream output, return when done."""
     print("🤖 Starting agent...")
     proc = subprocess.Popen(
-        [sys.executable, '-u', 'agent.py'],
+        [sys.executable, "-u", "agent.py"],
         cwd=SCRIPT_DIR,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
     )
-
-    # Stream output in real-time
     while proc.poll() is None:
         line = proc.stdout.readline()
         if line:
             print(f"  [agent] {line.rstrip()}")
-
-    # Drain remaining output
     for line in proc.stdout:
         print(f"  [agent] {line.rstrip()}")
-
-    print(f"  Agent exited with code {proc.returncode}")
     return proc.returncode
 
 
-def wait_for_game_end():
-    """Wait for game to end by monitoring the API"""
-    print("⏳ Monitoring game...")
-    consecutive_fails = 0
-    while True:
-        if game_api_alive():
-            consecutive_fails = 0
-        else:
-            consecutive_fails += 1
-            if consecutive_fails >= 5:
-                print("  Game API gone — game ended")
-                return
-        time.sleep(3)
-
-
 def load_history():
-    if not os.path.exists(HISTORY_FILE): return []
+    if not os.path.exists(HISTORY_FILE):
+        return []
     with open(HISTORY_FILE) as f:
         return [json.loads(l) for l in f if l.strip()]
 
 
-def print_evolution_summary():
+def print_summary():
     hist = load_history()
     if not hist:
-        print("📊 No game history yet")
+        print("📊 No games yet")
         return
     recent = hist[-10:]
     avg = sum(g["placement"] for g in recent) / len(recent)
     best = min(g["placement"] for g in recent)
-    worst = max(g["placement"] for g in recent)
     top4 = sum(1 for g in recent if g["placement"] <= 4)
-    print(f"📊 Last {len(recent)} games: avg={avg:.1f} best={best} worst={worst} top4={top4}/{len(recent)}")
+    print(f"📊 Last {len(recent)} games: avg={avg:.1f} best={best} top4={top4}/{len(recent)}")
+    for g in recent[-5:]:
+        print(f"  {g['time']} → #{g['placement']}")
 
 
 # ═══════════════════════════════════════
@@ -207,32 +182,49 @@ if __name__ == "__main__":
         print(f"\n{'='*50}")
         print(f"  GAME {game_num}")
         print(f"{'='*50}")
-        print_evolution_summary()
+        print_summary()
 
-        # Step 1: Queue
-        if not queue_and_accept():
-            print("⚠️ Queue failed, retrying in 30s...")
+        # Find LCU credentials
+        token, port = get_lcu()
+        if not token:
+            print("❌ LeagueClient not running. Waiting 30s...")
             time.sleep(30)
             continue
+        print(f"  LCU: port={port}")
 
-        # Step 2: Wait for game window
-        time.sleep(10)  # loading screen buffer
-        if not wait_for_game_window():
-            print("⚠️ No game window, retrying...")
+        # Queue
+        if not queue_and_accept(token, port):
+            print("⚠️ Queue failed, retrying in 15s...")
+            time.sleep(15)
+            continue
+
+        # Wait for game to load
+        time.sleep(5)
+        if not wait_for_game_api():
+            print("⚠️ Game didn't load, retrying...")
             time.sleep(10)
             continue
 
-        # Step 3: Run agent
-        time.sleep(5)  # let game fully load
+        # Play
+        time.sleep(3)
         run_agent()
 
-        # Step 4: If agent exited but game still running, wait for it to end
+        # If game still running (agent crashed), wait for it to end
         if game_api_alive():
-            wait_for_game_end()
+            print("⏳ Agent exited but game still running, waiting...")
+            for _ in range(300):
+                if not game_api_alive():
+                    break
+                time.sleep(3)
 
-        # Step 5: Summary
-        print_evolution_summary()
+        # Wait for client to return to lobby
+        print("  Waiting for lobby...")
+        for _ in range(60):
+            phase = get_phase(token, port)
+            if phase in ("None", "Lobby", "EndOfGame", "PreEndOfGame"):
+                break
+            time.sleep(2)
 
-        # Step 6: Brief pause before next game
-        print("⏰ Next game in 10s...")
-        time.sleep(10)
+        print_summary()
+        print("⏰ Next game in 5s...")
+        time.sleep(5)
