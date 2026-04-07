@@ -1,0 +1,47 @@
+[
+ {
+  "t": "00:45:00",
+  "ev": "startup",
+  "round": "3-3",
+  "gold": 92,
+  "level": 7,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:45:01",
+  "ev": "round",
+  "round": "3-3",
+  "gold": 92,
+  "level": 7,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:46:14",
+  "ev": "round",
+  "round": "3-4",
+  "gold": 3,
+  "level": 7,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:46:51",
+  "ev": "round",
+  "round": "3-5",
+  "gold": 4,
+  "level": 7,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:48:02",
+  "ev": "round",
+  "round": "3-6",
+  "gold": -1,
+  "level": 7,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:48:25",
+  "ev": "game_over",
+  "placement": 8
+ }
+]

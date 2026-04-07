@@ -1,0 +1,119 @@
+[
+ {
+  "t": "00:37:19",
+  "ev": "startup",
+  "round": "2-3",
+  "gold": 818,
+  "level": 4,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:37:19",
+  "ev": "round",
+  "round": "2-3",
+  "gold": 818,
+  "level": 4,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:37:58",
+  "ev": "round",
+  "round": "2-4",
+  "gold": -1,
+  "level": 5,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:38:41",
+  "ev": "round",
+  "round": "2-5",
+  "gold": 8,
+  "level": 5,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:39:59",
+  "ev": "round",
+  "round": "2-6",
+  "gold": 0,
+  "level": 6,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:41:03",
+  "ev": "round",
+  "round": "2-7",
+  "gold": 83,
+  "level": 6,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:41:54",
+  "ev": "round",
+  "round": "3-1",
+  "gold": 83,
+  "level": 6,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:43:13",
+  "ev": "round",
+  "round": "3-2",
+  "gold": -1,
+  "level": 6,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:44:19",
+  "ev": "augment"
+ },
+ {
+  "t": "00:44:28",
+  "ev": "augment"
+ },
+ {
+  "t": "00:44:38",
+  "ev": "augment"
+ },
+ {
+  "t": "00:44:46",
+  "ev": "augment"
+ },
+ {
+  "t": "00:44:53",
+  "ev": "round",
+  "round": "3-3",
+  "gold": 810,
+  "level": 7,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:46:15",
+  "ev": "round",
+  "round": "3-4",
+  "gold": -1,
+  "level": 7,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:46:50",
+  "ev": "round",
+  "round": "3-5",
+  "gold": 8,
+  "level": 7,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:47:58",
+  "ev": "round",
+  "round": "3-6",
+  "gold": 89,
+  "level": 7,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:48:27",
+  "ev": "game_over",
+  "placement": 8
+ }
+]

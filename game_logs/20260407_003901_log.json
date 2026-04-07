@@ -1,0 +1,99 @@
+[
+ {
+  "t": "00:39:01",
+  "ev": "startup",
+  "round": "2-5",
+  "gold": 1,
+  "level": 6,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:39:01",
+  "ev": "round",
+  "round": "2-5",
+  "gold": 1,
+  "level": 6,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:39:54",
+  "ev": "round",
+  "round": "2-6",
+  "gold": 0,
+  "level": 6,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:41:01",
+  "ev": "round",
+  "round": "2-7",
+  "gold": 97,
+  "level": 6,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:41:59",
+  "ev": "round",
+  "round": "3-1",
+  "gold": 82,
+  "level": 6,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:43:20",
+  "ev": "round",
+  "round": "3-2",
+  "gold": 82,
+  "level": 7,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:44:27",
+  "ev": "augment"
+ },
+ {
+  "t": "00:44:38",
+  "ev": "augment"
+ },
+ {
+  "t": "00:44:46",
+  "ev": "augment"
+ },
+ {
+  "t": "00:44:52",
+  "ev": "round",
+  "round": "3-3",
+  "gold": 810,
+  "level": 7,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:46:10",
+  "ev": "round",
+  "round": "3-4",
+  "gold": -1,
+  "level": 7,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:46:57",
+  "ev": "round",
+  "round": "3-5",
+  "gold": 80,
+  "level": 7,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:48:03",
+  "ev": "round",
+  "round": "3-6",
+  "gold": -1,
+  "level": 7,
+  "phase": "LEVELING"
+ },
+ {
+  "t": "00:48:22",
+  "ev": "game_over",
+  "placement": 8
+ }
+]

@@ -89,10 +89,8 @@ def fuzzy(t):
     return best if sc >= 0.5 else None
 
 def read_gold():
-    try:
-        t = ocr.get_text(GOLD_BOX, 3, 7, '0123456789')
-        return int(t) if t and t.isdigit() else -1
-    except: return -1
+    """Gold OCR is unreliable — return -1 to signal 'unknown'"""
+    return -1
 
 def read_round():
     for box in [(640, 72, 740, 102), (650, 75, 730, 100)]:
@@ -189,6 +187,15 @@ log("startup", round=rnd, gold=gold, level=lvl, phase=phase)
 last_rnd = ""; cycle = 0; start = time.time(); scouted = False
 
 try:
+    # Wait for game to actually start (level > 0)
+    print("Waiting for game start...")
+    for _ in range(60):
+        lvl = api_level()
+        if lvl > 0:
+            print(f"  Game started! Level={lvl}")
+            break
+        time.sleep(2)
+
     while RUNNING:
         alive, placement = api_alive()
         if not alive:
