@@ -168,7 +168,7 @@ rnd = read_round(); lvl = api_level(); gold = read_gold()
 stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
 
 if lvl >= 8: phase = "ROLLDOWN"
-elif stage >= 3 or lvl >= 4: phase = "LEVELING"
+elif stage >= 4: phase = "ROLLDOWN"
 else: phase = "EARLY"
 
 print(f"Start: R{rnd} G:{gold} Lvl:{lvl} → {phase}")
@@ -197,33 +197,22 @@ try:
         if cycle % 10 == 0 and cycle > 0: pickup_loot()
 
         # ── Phase transitions ──
-        # EARLY → LEVELING at stage 3 (buy XP only)
-        # LEVELING → ROLLDOWN when level 8
-        # ROLLDOWN → LATEGAME after rolling
-        if phase == "EARLY" and (stage >= 3 or lvl >= 4):
-            phase = "LEVELING"
-            print(f"\n📈 → LEVELING (stage {stage}, lvl {lvl})")
-            log("phase", phase="LEVELING")
-
-        if phase == "LEVELING" and lvl >= 8:
+        # EARLY (stages 1-3): save gold, earn interest, don't spend
+        # ROLLDOWN (stage 4+): level to 8, roll for carries
+        # LATEGAME: maintain board
+        if phase == "EARLY" and stage >= 4:
             phase = "ROLLDOWN"
-            print(f"\n🎯 → ROLLDOWN (lvl 8!)")
+            print(f"\n🎯 → ROLLDOWN (stage {stage}, lvl {lvl})")
             log("phase", phase="ROLLDOWN")
 
-        # ═══ EARLY (stages 1-2): do NOTHING, save gold ═══
+        # ═══ EARLY (stages 1-3): SAVE GOLD, earn interest ═══
         if phase == "EARLY":
-            # Just place whatever we got from carousel/PvE
             if cycle % 5 == 0: place_bench_to_board()
-            # Slam items onto units every 4 cycles
             if cycle % 4 == 0: slam_items()
-
-        # ═══ LEVELING (stage 3+): spend ALL gold on XP ═══
-        elif phase == "LEVELING":
-            buy_xp()
-            if cycle % 5 == 0:
-                print(f"  📈 XP (lvl {lvl})")
-                place_bench_to_board()
-            if cycle % 6 == 0: slam_items()
+            # Only buy XP with gold ABOVE 50 (preserve max interest)
+            if gold > 50 and lvl < 7 and cycle % 4 == 0:
+                buy_xp()
+                print(f"  📈 XP (g={gold} lvl={lvl})")
 
         # ═══ ROLLDOWN (level 8): roll and buy 3+ cost units ═══
         elif phase == "ROLLDOWN":
