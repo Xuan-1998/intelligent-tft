@@ -159,19 +159,59 @@ def click_left_option():
     """Click left god blessing — confirmed working at 30% x, 25% y"""
     pyautogui.click(int(W*0.30), int(Y_OFF+EFF_H*0.25)); time.sleep(0.5)
 
-def is_god_screen():
-    """Detect god selection by checking if the normal board is NOT visible.
-    During god screen, the shop area is hidden."""
+def detect_screen():
+    """Detect what screen we're on by checking pixel brightness in key areas.
+    Returns: 'normal', 'popup', 'god', or 'augment'"""
+    import numpy as np
     try:
-        txt = ocr.get_text(screenxy=(600,120,870,170), scale=3, psm=7)
-        # No 'Planning' and no round timer visible = likely god/special screen
-        if 'lanning' in txt: return False
-        # Check if shop is visible
-        shop_img = ocr._grab(screen_coords.SHOP_POS.get_coords())
-        crop = shop_img.crop(screen_coords.CHAMP_NAME_POS[0].get_coords())
-        raw = ocr.get_text_from_image(crop).strip()
-        return len(raw) < 2  # shop not readable = god screen or combat
-    except: return False
+        # Check center of board area — normally bright (green/brown board)
+        # During popups/god/augment — dark overlay
+        center = ocr._grab((W//2-50, Y_OFF+EFF_H//3, W//2+50, Y_OFF+EFF_H//3+30))
+        avg = np.array(center).mean()
+
+        # Check bottom area for shop visibility
+        shop = ocr._grab((int(W*0.3), int(Y_OFF+EFF_H*0.85), int(W*0.7), int(Y_OFF+EFF_H*0.9)))
+        shop_avg = np.array(shop).mean()
+
+        # Check for augment cards (3 bright rectangles in center)
+        mid = ocr._grab((int(W*0.25), int(Y_OFF+EFF_H*0.4), int(W*0.75), int(Y_OFF+EFF_H*0.6)))
+        mid_avg = np.array(mid).mean()
+
+        if avg < 60:  # very dark center = god screen or special overlay
+            return 'god'
+        if shop_avg < 50 and mid_avg > 80:  # no shop but bright center cards = augment
+            return 'augment'
+        if shop_avg > 100:  # shop visible = normal or popup over board
+            # Check for purple popup (Tech Resupply etc)
+            bottom = ocr._grab((int(W*0.3), int(Y_OFF+EFF_H*0.65), int(W*0.7), int(Y_OFF+EFF_H*0.75)))
+            bottom_arr = np.array(bottom)
+            # Purple-ish = high blue+red, lower green
+            if bottom_arr[:,:,2].mean() > 100 and bottom_arr[:,:,0].mean() > 80:
+                return 'popup'
+        return 'normal'
+    except:
+        return 'normal'
+
+def handle_special_screen(screen_type):
+    """Handle non-normal screens"""
+    if screen_type == 'god':
+        print("  ⚡ GOD SCREEN — clicking left god")
+        click_left_option()
+        time.sleep(2)
+        click_popup()
+        time.sleep(1)
+    elif screen_type == 'augment':
+        print("  🎯 AUGMENT — picking first option")
+        # Augment cards: left ~30%, center ~50%, right ~70% of screen, ~45% y
+        pyautogui.click(int(W*0.30), int(Y_OFF+EFF_H*0.45))
+        time.sleep(1.5)
+    elif screen_type == 'popup':
+        print("  📦 POPUP — clicking Take All")
+        # Take All button at ~57% x, ~71% y
+        pyautogui.click(int(W*0.57), int(Y_OFF+EFF_H*0.71))
+        time.sleep(0.5)
+        click_popup()
+        time.sleep(0.3)
 
 # ── Main Loop ──
 phase = "ECON"
@@ -187,14 +227,11 @@ try:
         # During combat, shop clicks won't work anyway (shop is locked)
         # So it's safe to try buying — it just won't do anything during combat
 
-        # Check for god screen
-        if is_god_screen():
-            print("  ⚡ God screen! Clicking left god")
-            click_left_option()
-            time.sleep(2)
-            click_popup()
-            time.sleep(1)
-            cycle+=1; continue
+        # ── Detect and handle special screens ──
+        screen = detect_screen()
+        if screen != 'normal':
+            handle_special_screen(screen)
+            cycle+=1; time.sleep(1); continue
 
         # ── Planning phase: act! ──
 
