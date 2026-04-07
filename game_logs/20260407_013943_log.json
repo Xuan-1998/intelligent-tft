@@ -1,0 +1,84 @@
+[
+ {
+  "t": "01:39:43",
+  "ev": "startup",
+  "round": "2-6",
+  "level": 5,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:39:44",
+  "ev": "round",
+  "round": "2-6",
+  "level": 5,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:40:05",
+  "ev": "round",
+  "round": "2-7",
+  "level": 5,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:40:36",
+  "ev": "round",
+  "round": "3-1",
+  "level": 5,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:41:42",
+  "ev": "round",
+  "round": "3-2",
+  "level": 6,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:43:08",
+  "ev": "round",
+  "round": "3-3",
+  "level": 6,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:44:14",
+  "ev": "round",
+  "round": "3-4",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:44:45",
+  "ev": "round",
+  "round": "3-5",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:45:46",
+  "ev": "round",
+  "round": "3-6",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:46:50",
+  "ev": "round",
+  "round": "3-7",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:47:55",
+  "ev": "round",
+  "round": "4-1",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:48:21",
+  "ev": "game_over",
+  "placement": 8
+ }
+]

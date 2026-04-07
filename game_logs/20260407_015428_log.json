@@ -1,0 +1,14 @@
+[
+ {
+  "t": "01:54:28",
+  "ev": "startup",
+  "round": "4-7",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:54:28",
+  "ev": "game_over",
+  "placement": 7
+ }
+]

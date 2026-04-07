@@ -124,23 +124,26 @@ def run_agent():
     print(f"  Agent exited ({proc.returncode})")
 
 def exit_game():
-    """Exit finished game via API"""
+    """Exit finished game via API + click Exit Now button"""
     print("🚪 Exiting game...")
-    # Wait for game to actually end
     for i in range(30):
-        if not game_api_alive():
-            break
+        if not game_api_alive(): break
         time.sleep(2)
 
-    # Use early-exit API
+    # Click Exit Now button at known coordinates
+    try:
+        import pyautogui; pyautogui.FAILSAFE = False
+        pyautogui.click(862, 578)  # Exit Now button
+        time.sleep(2)
+    except: pass
+
+    # Also try LCU early-exit API
     token, url = get_auth()
     if token:
         lcu_post('/lol-gameflow/v1/early-exit', token, url)
         time.sleep(3)
         phase, _, _ = get_phase()
         print(f"  Phase after exit: {phase}")
-
-        # If still EndOfGame, try again
         if phase == "EndOfGame":
             lcu_post('/lol-gameflow/v1/early-exit', token, url)
             time.sleep(5)

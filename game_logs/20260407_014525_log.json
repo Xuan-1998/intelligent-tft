@@ -1,0 +1,42 @@
+[
+ {
+  "t": "01:45:25",
+  "ev": "startup",
+  "round": "3-5",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:45:25",
+  "ev": "round",
+  "round": "3-5",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:45:47",
+  "ev": "round",
+  "round": "3-6",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:46:56",
+  "ev": "round",
+  "round": "3-7",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:47:44",
+  "ev": "round",
+  "round": "4-1",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:48:22",
+  "ev": "game_over",
+  "placement": 8
+ }
+]

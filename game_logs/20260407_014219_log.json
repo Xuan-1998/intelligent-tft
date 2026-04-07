@@ -1,0 +1,63 @@
+[
+ {
+  "t": "01:42:19",
+  "ev": "startup",
+  "round": "3-2",
+  "level": 6,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:42:19",
+  "ev": "round",
+  "round": "3-2",
+  "level": 6,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:43:07",
+  "ev": "round",
+  "round": "3-3",
+  "level": 6,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:44:14",
+  "ev": "round",
+  "round": "3-4",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:44:43",
+  "ev": "round",
+  "round": "3-5",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:45:47",
+  "ev": "round",
+  "round": "3-6",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:46:51",
+  "ev": "round",
+  "round": "3-7",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:47:54",
+  "ev": "round",
+  "round": "4-1",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "01:48:19",
+  "ev": "game_over",
+  "placement": 8
+ }
+]

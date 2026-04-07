@@ -50,16 +50,16 @@ def game_api_alive():
 
 
 def exit_game():
-    """Exit spectator/dead state: Esc → Exit Game"""
+    """Exit game: click EXIT NOW button, or Esc → Exit Game"""
     print("  Exiting game...")
+    # First try EXIT NOW button (shown when dead)
+    pyautogui.click(862, 578)
+    time.sleep(2)
+    # Then try Esc → Exit Game (options menu)
     pyautogui.press('escape')
-    time.sleep(1.5)
-    # Click Exit Game button (options menu bottom-left)
-    # Try multiple positions since window can shift
-    for pos in [(441, 653), (468, 661), (441, 661), (468, 653)]:
-        pyautogui.click(*pos)
-        time.sleep(0.5)
-    time.sleep(3)
+    time.sleep(1)
+    pyautogui.click(468, 661)
+    time.sleep(2)
 
 
 def queue_and_accept():
