@@ -1,0 +1,72 @@
+[
+ {
+  "t": "23:28:34",
+  "ev": "round",
+  "round": "4-1",
+  "gold": 30,
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "23:28:42",
+  "ev": "phase",
+  "phase": "ROLLDOWN"
+ },
+ {
+  "t": "23:28:57",
+  "ev": "rolldown",
+  "rolls": 1,
+  "found": []
+ },
+ {
+  "t": "23:29:01",
+  "ev": "buy",
+  "champ": "ChoGath",
+  "cost": 1
+ },
+ {
+  "t": "23:29:09",
+  "ev": "round",
+  "round": "4-2",
+  "gold": 93,
+  "level": 7,
+  "phase": "LATEGAME"
+ },
+ {
+  "t": "23:29:10",
+  "ev": "buy",
+  "champ": "Caitlyn",
+  "cost": 1
+ },
+ {
+  "t": "23:30:25",
+  "ev": "buy",
+  "champ": "Urgot",
+  "cost": 3
+ },
+ {
+  "t": "23:30:35",
+  "ev": "buy",
+  "champ": "Urgot",
+  "cost": 3
+ },
+ {
+  "t": "23:30:44",
+  "ev": "round",
+  "round": "4-3",
+  "gold": 91,
+  "level": 8,
+  "phase": "LATEGAME"
+ },
+ {
+  "t": "23:30:45",
+  "ev": "buy",
+  "champ": "Urgot",
+  "cost": 3
+ },
+ {
+  "t": "23:30:53",
+  "ev": "game_over",
+  "placement": 8
+ }
+]

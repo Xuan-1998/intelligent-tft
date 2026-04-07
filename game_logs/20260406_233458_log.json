@@ -1,0 +1,58 @@
+[
+ {
+  "t": "23:34:58",
+  "ev": "tick",
+  "gold": 31,
+  "level": 8,
+  "round": "",
+  "phase": "EARLY",
+  "cycle": 0
+ },
+ {
+  "t": "23:35:04",
+  "ev": "buy",
+  "champ": "Nasus",
+  "cost": 1
+ },
+ {
+  "t": "23:35:06",
+  "ev": "round",
+  "round": "4-7",
+  "gold": 12,
+  "level": 8,
+  "phase": "EARLY"
+ },
+ {
+  "t": "23:35:07",
+  "ev": "phase",
+  "phase": "ROLLDOWN"
+ },
+ {
+  "t": "23:35:09",
+  "ev": "buy",
+  "champ": "Urgot",
+  "cost": 3
+ },
+ {
+  "t": "23:35:10",
+  "ev": "buy",
+  "champ": "Urgot",
+  "cost": 3
+ },
+ {
+  "t": "23:35:11",
+  "ev": "buy",
+  "champ": "Mordekaiser",
+  "cost": 2
+ },
+ {
+  "t": "23:35:33",
+  "ev": "rolldown",
+  "rolls": 17,
+  "found": [
+   "Urgot",
+   "Urgot",
+   "Mordekaiser"
+  ]
+ }
+]

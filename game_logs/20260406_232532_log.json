@@ -1,0 +1,60 @@
+[
+ {
+  "t": "23:25:32",
+  "ev": "round",
+  "round": "3-5",
+  "gold": 91,
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "23:25:33",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:25:39",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:25:41",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:25:44",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:25:45",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:25:50",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:25:51",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:25:52",
+  "ev": "round",
+  "round": "3-6",
+  "gold": 90,
+  "level": 7,
+  "phase": "EARLY"
+ }
+]

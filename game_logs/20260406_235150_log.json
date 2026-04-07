@@ -1,0 +1,248 @@
+[
+ {
+  "t": "23:51:50",
+  "ev": "startup",
+  "round": "",
+  "gold": 92,
+  "level": 2,
+  "phase": "EARLY"
+ },
+ {
+  "t": "23:51:50",
+  "ev": "tick",
+  "gold": 92,
+  "level": 2,
+  "round": "",
+  "phase": "EARLY",
+  "cycle": 0
+ },
+ {
+  "t": "23:51:51",
+  "ev": "buy",
+  "champ": "Caitlyn",
+  "cost": 1
+ },
+ {
+  "t": "23:51:52",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:52:07",
+  "ev": "tick",
+  "gold": 90,
+  "level": 2,
+  "round": "",
+  "phase": "EARLY",
+  "cycle": 5
+ },
+ {
+  "t": "23:52:17",
+  "ev": "buy",
+  "champ": "Caitlyn",
+  "cost": 1
+ },
+ {
+  "t": "23:52:19",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:52:23",
+  "ev": "tick",
+  "gold": 91,
+  "level": 3,
+  "round": "",
+  "phase": "EARLY",
+  "cycle": 10
+ },
+ {
+  "t": "23:52:24",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:52:28",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:52:30",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:52:35",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:52:38",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:52:40",
+  "ev": "tick",
+  "gold": 91,
+  "level": 3,
+  "round": "",
+  "phase": "EARLY",
+  "cycle": 15
+ },
+ {
+  "t": "23:52:41",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:52:45",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:52:48",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:52:51",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:52:55",
+  "ev": "round",
+  "round": "2-1",
+  "gold": -1,
+  "level": 3,
+  "phase": "EARLY"
+ },
+ {
+  "t": "23:52:58",
+  "ev": "tick",
+  "gold": -1,
+  "level": 3,
+  "round": "",
+  "phase": "EARLY",
+  "cycle": 20
+ },
+ {
+  "t": "23:53:02",
+  "ev": "buy",
+  "champ": "Poppy",
+  "cost": 1
+ },
+ {
+  "t": "23:53:09",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:53:12",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:53:22",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:53:28",
+  "ev": "tick",
+  "gold": 6,
+  "level": 6,
+  "round": "2-1",
+  "phase": "EARLY",
+  "cycle": 25
+ },
+ {
+  "t": "23:53:48",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:53:51",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:53:53",
+  "ev": "tick",
+  "gold": 6,
+  "level": 6,
+  "round": "2-1",
+  "phase": "EARLY",
+  "cycle": 30
+ },
+ {
+  "t": "23:53:54",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:54:01",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:54:12",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:54:14",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:54:21",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:54:23",
+  "ev": "tick",
+  "gold": 6,
+  "level": 6,
+  "round": "2-1",
+  "phase": "EARLY",
+  "cycle": 35
+ },
+ {
+  "t": "23:54:24",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:54:40",
+  "ev": "round",
+  "round": "2-2",
+  "gold": 210,
+  "level": 6,
+  "phase": "EARLY"
+ }
+]

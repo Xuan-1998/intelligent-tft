@@ -1,0 +1,55 @@
+[
+ {
+  "t": "23:50:46",
+  "ev": "startup",
+  "round": "",
+  "gold": -1,
+  "level": 1,
+  "phase": "EARLY"
+ },
+ {
+  "t": "23:50:47",
+  "ev": "tick",
+  "gold": -1,
+  "level": 1,
+  "round": "",
+  "phase": "EARLY",
+  "cycle": 0
+ },
+ {
+  "t": "23:50:59",
+  "ev": "tick",
+  "gold": -1,
+  "level": 1,
+  "round": "",
+  "phase": "EARLY",
+  "cycle": 5
+ },
+ {
+  "t": "23:51:12",
+  "ev": "tick",
+  "gold": -1,
+  "level": 1,
+  "round": "",
+  "phase": "EARLY",
+  "cycle": 10
+ },
+ {
+  "t": "23:51:25",
+  "ev": "tick",
+  "gold": -1,
+  "level": 1,
+  "round": "",
+  "phase": "EARLY",
+  "cycle": 15
+ },
+ {
+  "t": "23:51:38",
+  "ev": "tick",
+  "gold": -1,
+  "level": 1,
+  "round": "",
+  "phase": "EARLY",
+  "cycle": 20
+ }
+]

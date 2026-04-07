@@ -1,0 +1,38 @@
+[
+ {
+  "t": "23:41:48",
+  "ev": "startup",
+  "round": "",
+  "gold": 92,
+  "level": 9,
+  "phase": "EARLY"
+ },
+ {
+  "t": "23:41:48",
+  "ev": "round",
+  "round": "6-1",
+  "gold": 92,
+  "level": 9,
+  "phase": "EARLY"
+ },
+ {
+  "t": "23:41:49",
+  "ev": "tick",
+  "gold": 92,
+  "level": 9,
+  "round": "6-1",
+  "phase": "EARLY",
+  "cycle": 0
+ },
+ {
+  "t": "23:41:56",
+  "ev": "phase",
+  "phase": "ROLLDOWN"
+ },
+ {
+  "t": "23:42:03",
+  "ev": "rolldown",
+  "rolls": 0,
+  "found": []
+ }
+]
