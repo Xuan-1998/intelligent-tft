@@ -152,8 +152,10 @@ def handle_popup():
     return False
 
 def slam_items():
+    """Drag all item slots onto board champions"""
     slots = [p[0].get_coords() for p in screen_coords.ITEM_POS]
-    targets = [BOARD[0], BOARD[1], BOARD[14], BOARD[21]]
+    # Spread items across board positions (back row carries + front row tanks)
+    targets = [BOARD[21], BOARD[22], BOARD[23], BOARD[24], BOARD[0], BOARD[1], BOARD[2], BOARD[14], BOARD[25], BOARD[3]]
     for i, s in enumerate(slots):
         t = targets[i % len(targets)]
         pyautogui.moveTo(*s); time.sleep(0.05)
@@ -212,13 +214,16 @@ try:
         if phase == "EARLY":
             # Just place whatever we got from carousel/PvE
             if cycle % 5 == 0: place_bench_to_board()
+            # Slam items onto units every 4 cycles
+            if cycle % 4 == 0: slam_items()
 
-        # ═══ LEVELING (stage 3+): spend ALL gold on XP, no buying, no rolling ═══
+        # ═══ LEVELING (stage 3+): spend ALL gold on XP ═══
         elif phase == "LEVELING":
             buy_xp()
             if cycle % 5 == 0:
                 print(f"  📈 XP (lvl {lvl})")
                 place_bench_to_board()
+            if cycle % 6 == 0: slam_items()
 
         # ═══ ROLLDOWN (level 8): roll and buy 3+ cost units ═══
         elif phase == "ROLLDOWN":
