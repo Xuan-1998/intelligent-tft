@@ -1,0 +1,478 @@
+[
+ {
+  "t": "00:09:21",
+  "ev": "startup",
+  "round": "4-1",
+  "level": 8,
+  "phase": "LATEGAME"
+ },
+ {
+  "t": "00:09:21",
+  "ev": "round",
+  "round": "4-1",
+  "level": 8,
+  "phase": "LATEGAME"
+ },
+ {
+  "t": "00:09:25",
+  "ev": "buy",
+  "champ": "Gragas",
+  "cost": 2
+ },
+ {
+  "t": "00:09:25",
+  "ev": "buy",
+  "champ": "Jax",
+  "cost": 2
+ },
+ {
+  "t": "00:09:25",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "00:09:26",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "00:09:26",
+  "ev": "buy",
+  "champ": "Nunu",
+  "cost": 4
+ },
+ {
+  "t": "00:09:34",
+  "ev": "buy",
+  "champ": "TwistedFate",
+  "cost": 1
+ },
+ {
+  "t": "00:09:34",
+  "ev": "buy",
+  "champ": "Rhaast",
+  "cost": 3
+ },
+ {
+  "t": "00:09:34",
+  "ev": "buy",
+  "champ": "Gnar",
+  "cost": 2
+ },
+ {
+  "t": "00:09:35",
+  "ev": "buy",
+  "champ": "TheMightyMech",
+  "cost": 4
+ },
+ {
+  "t": "00:09:35",
+  "ev": "buy",
+  "champ": "Riven",
+  "cost": 4
+ },
+ {
+  "t": "00:09:37",
+  "ev": "buy",
+  "champ": "TwistedFate",
+  "cost": 1
+ },
+ {
+  "t": "00:09:38",
+  "ev": "buy",
+  "champ": "Rhaast",
+  "cost": 3
+ },
+ {
+  "t": "00:09:38",
+  "ev": "buy",
+  "champ": "Gnar",
+  "cost": 2
+ },
+ {
+  "t": "00:09:38",
+  "ev": "buy",
+  "champ": "TheMightyMech",
+  "cost": 4
+ },
+ {
+  "t": "00:09:39",
+  "ev": "buy",
+  "champ": "Riven",
+  "cost": 4
+ },
+ {
+  "t": "00:09:46",
+  "ev": "buy",
+  "champ": "TwistedFate",
+  "cost": 1
+ },
+ {
+  "t": "00:09:46",
+  "ev": "buy",
+  "champ": "Rhaast",
+  "cost": 3
+ },
+ {
+  "t": "00:09:47",
+  "ev": "buy",
+  "champ": "Gnar",
+  "cost": 2
+ },
+ {
+  "t": "00:09:47",
+  "ev": "buy",
+  "champ": "TheMightyMech",
+  "cost": 4
+ },
+ {
+  "t": "00:09:47",
+  "ev": "buy",
+  "champ": "Riven",
+  "cost": 4
+ },
+ {
+  "t": "00:09:49",
+  "ev": "buy",
+  "champ": "TwistedFate",
+  "cost": 1
+ },
+ {
+  "t": "00:09:50",
+  "ev": "buy",
+  "champ": "Rhaast",
+  "cost": 3
+ },
+ {
+  "t": "00:09:50",
+  "ev": "buy",
+  "champ": "Gnar",
+  "cost": 2
+ },
+ {
+  "t": "00:09:50",
+  "ev": "buy",
+  "champ": "TheMightyMech",
+  "cost": 4
+ },
+ {
+  "t": "00:09:51",
+  "ev": "buy",
+  "champ": "Riven",
+  "cost": 4
+ },
+ {
+  "t": "00:09:58",
+  "ev": "buy",
+  "champ": "TwistedFate",
+  "cost": 1
+ },
+ {
+  "t": "00:09:59",
+  "ev": "buy",
+  "champ": "Rhaast",
+  "cost": 3
+ },
+ {
+  "t": "00:09:59",
+  "ev": "buy",
+  "champ": "Gnar",
+  "cost": 2
+ },
+ {
+  "t": "00:09:59",
+  "ev": "buy",
+  "champ": "TheMightyMech",
+  "cost": 4
+ },
+ {
+  "t": "00:09:59",
+  "ev": "buy",
+  "champ": "Riven",
+  "cost": 4
+ },
+ {
+  "t": "00:10:02",
+  "ev": "buy",
+  "champ": "TwistedFate",
+  "cost": 1
+ },
+ {
+  "t": "00:10:02",
+  "ev": "buy",
+  "champ": "Rhaast",
+  "cost": 3
+ },
+ {
+  "t": "00:10:02",
+  "ev": "buy",
+  "champ": "Gnar",
+  "cost": 2
+ },
+ {
+  "t": "00:10:03",
+  "ev": "buy",
+  "champ": "TheMightyMech",
+  "cost": 4
+ },
+ {
+  "t": "00:10:03",
+  "ev": "buy",
+  "champ": "Riven",
+  "cost": 4
+ },
+ {
+  "t": "00:10:10",
+  "ev": "round",
+  "round": "4-2",
+  "level": 8,
+  "phase": "LATEGAME"
+ },
+ {
+  "t": "00:10:12",
+  "ev": "buy",
+  "champ": "Sona",
+  "cost": 5
+ },
+ {
+  "t": "00:10:14",
+  "ev": "buy",
+  "champ": "Diana",
+  "cost": 3
+ },
+ {
+  "t": "00:10:14",
+  "ev": "buy",
+  "champ": "Viktor",
+  "cost": 3
+ },
+ {
+  "t": "00:10:14",
+  "ev": "buy",
+  "champ": "Illaoi",
+  "cost": 3
+ },
+ {
+  "t": "00:10:14",
+  "ev": "buy",
+  "champ": "Talon",
+  "cost": 1
+ },
+ {
+  "t": "00:10:15",
+  "ev": "buy",
+  "champ": "Nasus",
+  "cost": 1
+ },
+ {
+  "t": "00:10:23",
+  "ev": "buy",
+  "champ": "Diana",
+  "cost": 3
+ },
+ {
+  "t": "00:10:23",
+  "ev": "buy",
+  "champ": "Viktor",
+  "cost": 3
+ },
+ {
+  "t": "00:10:23",
+  "ev": "buy",
+  "champ": "Illaoi",
+  "cost": 3
+ },
+ {
+  "t": "00:10:23",
+  "ev": "buy",
+  "champ": "Talon",
+  "cost": 1
+ },
+ {
+  "t": "00:10:24",
+  "ev": "buy",
+  "champ": "Nasus",
+  "cost": 1
+ },
+ {
+  "t": "00:10:28",
+  "ev": "buy",
+  "champ": "Diana",
+  "cost": 3
+ },
+ {
+  "t": "00:10:29",
+  "ev": "buy",
+  "champ": "Viktor",
+  "cost": 3
+ },
+ {
+  "t": "00:10:29",
+  "ev": "buy",
+  "champ": "Illaoi",
+  "cost": 3
+ },
+ {
+  "t": "00:10:29",
+  "ev": "buy",
+  "champ": "Talon",
+  "cost": 1
+ },
+ {
+  "t": "00:10:30",
+  "ev": "buy",
+  "champ": "Nasus",
+  "cost": 1
+ },
+ {
+  "t": "00:10:37",
+  "ev": "buy",
+  "champ": "Sona",
+  "cost": 5
+ },
+ {
+  "t": "00:10:39",
+  "ev": "buy",
+  "champ": "Diana",
+  "cost": 3
+ },
+ {
+  "t": "00:10:39",
+  "ev": "buy",
+  "champ": "Viktor",
+  "cost": 3
+ },
+ {
+  "t": "00:10:40",
+  "ev": "buy",
+  "champ": "Illaoi",
+  "cost": 3
+ },
+ {
+  "t": "00:10:40",
+  "ev": "buy",
+  "champ": "Talon",
+  "cost": 1
+ },
+ {
+  "t": "00:10:40",
+  "ev": "buy",
+  "champ": "Nasus",
+  "cost": 1
+ },
+ {
+  "t": "00:10:48",
+  "ev": "buy",
+  "champ": "Riven",
+  "cost": 4
+ },
+ {
+  "t": "00:10:49",
+  "ev": "buy",
+  "champ": "Vex",
+  "cost": 5
+ },
+ {
+  "t": "00:10:49",
+  "ev": "buy",
+  "champ": "Teemo",
+  "cost": 1
+ },
+ {
+  "t": "00:10:49",
+  "ev": "buy",
+  "champ": "Teemo",
+  "cost": 1
+ },
+ {
+  "t": "00:10:49",
+  "ev": "buy",
+  "champ": "Urgot",
+  "cost": 3
+ },
+ {
+  "t": "00:10:52",
+  "ev": "buy",
+  "champ": "Riven",
+  "cost": 4
+ },
+ {
+  "t": "00:10:52",
+  "ev": "buy",
+  "champ": "Vex",
+  "cost": 5
+ },
+ {
+  "t": "00:10:52",
+  "ev": "buy",
+  "champ": "Pyke",
+  "cost": 2
+ },
+ {
+  "t": "00:10:53",
+  "ev": "buy",
+  "champ": "Urgot",
+  "cost": 3
+ },
+ {
+  "t": "00:11:00",
+  "ev": "buy",
+  "champ": "Riven",
+  "cost": 4
+ },
+ {
+  "t": "00:11:00",
+  "ev": "buy",
+  "champ": "Teemo",
+  "cost": 1
+ },
+ {
+  "t": "00:11:01",
+  "ev": "buy",
+  "champ": "Teemo",
+  "cost": 1
+ },
+ {
+  "t": "00:11:01",
+  "ev": "buy",
+  "champ": "Teemo",
+  "cost": 1
+ },
+ {
+  "t": "00:11:01",
+  "ev": "buy",
+  "champ": "Urgot",
+  "cost": 3
+ },
+ {
+  "t": "00:11:03",
+  "ev": "buy",
+  "champ": "Vex",
+  "cost": 5
+ },
+ {
+  "t": "00:11:04",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "00:11:11",
+  "ev": "buy",
+  "champ": "Meepsie",
+  "cost": 2
+ },
+ {
+  "t": "00:11:12",
+  "ev": "buy",
+  "champ": "Shen",
+  "cost": 5
+ },
+ {
+  "t": "00:11:12",
+  "ev": "game_over",
+  "placement": 7
+ }
+]

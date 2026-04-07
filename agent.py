@@ -165,8 +165,8 @@ print(f"═══ TFT Agent v6 | {GID} ═══")
 rnd = read_round(); lvl = api_level(); gold = read_gold()
 stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
 
-if stage >= 5 or lvl >= 8: phase = "LATEGAME"
-elif stage >= 4 or lvl >= 6: phase = "ROLLDOWN"
+if lvl >= 8: phase = "ROLLDOWN"
+elif stage >= 3 or lvl >= 4: phase = "LEVELING"
 else: phase = "EARLY"
 
 print(f"Start: R{rnd} G:{gold} Lvl:{lvl} → {phase}")
@@ -195,39 +195,34 @@ try:
         if cycle % 10 == 0 and cycle > 0: pickup_loot()
 
         # ── Phase transitions ──
-        if phase == "EARLY" and stage >= 4:
+        # EARLY → LEVELING at stage 3 (buy XP only)
+        # LEVELING → ROLLDOWN when level 8
+        # ROLLDOWN → LATEGAME after rolling
+        if phase == "EARLY" and (stage >= 3 or lvl >= 4):
+            phase = "LEVELING"
+            print(f"\n📈 → LEVELING (stage {stage}, lvl {lvl})")
+            log("phase", phase="LEVELING")
+
+        if phase == "LEVELING" and lvl >= 8:
             phase = "ROLLDOWN"
-            print(f"\n🎯 → ROLLDOWN (g={gold} lvl={lvl})")
+            print(f"\n🎯 → ROLLDOWN (lvl 8!)")
             log("phase", phase="ROLLDOWN")
 
-        # ═══ EARLY (stages 1-3): PURE ECON ═══
-        # Only buy 1-cost units from our comp, never break interest thresholds
+        # ═══ EARLY (stages 1-2): do NOTHING, save gold ═══
         if phase == "EARLY":
-            if gold >= 0:
-                shop = read_shop()
-                for i, ch in enumerate(shop):
-                    if not ch: continue
-                    cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                    if cost > gold: continue
-                    # Only 1-cost from early game list, preserve interest (multiples of 10)
-                    interest_floor = (gold // 10) * 10
-                    if ch in comps.EARLY_GAME_BUYS and cost == 1 and (gold - cost) >= interest_floor:
-                        buy_slot(i); gold -= cost
-                        print(f"  💰 {ch} ({cost}g) [g→{gold}]")
-                        log("buy", champ=ch, cost=cost, gold_after=gold)
+            # Just place whatever we got from carousel/PvE
+            if cycle % 5 == 0: place_bench_to_board()
 
-            if cycle % 4 == 0: place_bench_to_board()
+        # ═══ LEVELING (stage 3+): spend ALL gold on XP, no buying, no rolling ═══
+        elif phase == "LEVELING":
+            buy_xp()
+            if cycle % 5 == 0:
+                print(f"  📈 XP (lvl {lvl})")
+                place_bench_to_board()
 
-        # ═══ ROLLDOWN (stage 4): level to 8, roll for carries ═══
+        # ═══ ROLLDOWN (level 8): roll and buy 3+ cost units ═══
         elif phase == "ROLLDOWN":
-            # Level to 8
-            ct = 0
-            while RUNNING and api_level() < 8 and ct < 30:
-                buy_xp(); ct += 1; time.sleep(0.15)
-                if read_gold() <= 0: break
-            print(f"  Leveled to {api_level()}")
-
-            # Roll and buy carries + any 4/5-cost
+            # Already level 8 — just roll and buy
             targets = comps.ROLLDOWN_BUYS | comps.EARLY_GAME_BUYS
             found = []
             for roll in range(25):
@@ -239,7 +234,7 @@ try:
                 for i, ch in enumerate(shop):
                     if not ch: continue
                     cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                    if ch in targets or cost >= 4:
+                    if cost >= 3:
                         buy_slot(i); found.append(ch)
                         print(f"  🎯 {ch} ({cost}g)")
                         log("buy", champ=ch, cost=cost)

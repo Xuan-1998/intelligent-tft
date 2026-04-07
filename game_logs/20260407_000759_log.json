@@ -1,0 +1,39 @@
+[
+ {
+  "t": "00:07:59",
+  "ev": "startup",
+  "round": "3-6",
+  "level": 8,
+  "phase": "EARLY"
+ },
+ {
+  "t": "00:07:59",
+  "ev": "round",
+  "round": "3-6",
+  "level": 8,
+  "phase": "EARLY"
+ },
+ {
+  "t": "00:08:03",
+  "ev": "buy",
+  "champ": "Talon",
+  "cost": 1
+ },
+ {
+  "t": "00:08:04",
+  "ev": "buy",
+  "champ": "Talon",
+  "cost": 1
+ },
+ {
+  "t": "00:08:04",
+  "ev": "buy",
+  "champ": "Talon",
+  "cost": 1
+ },
+ {
+  "t": "00:08:10",
+  "ev": "game_over",
+  "placement": 8
+ }
+]

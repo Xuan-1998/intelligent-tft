@@ -1,0 +1,189 @@
+[
+ {
+  "t": "00:10:25",
+  "ev": "startup",
+  "round": "4-2",
+  "level": 8,
+  "phase": "LATEGAME"
+ },
+ {
+  "t": "00:10:26",
+  "ev": "round",
+  "round": "4-2",
+  "level": 8,
+  "phase": "LATEGAME"
+ },
+ {
+  "t": "00:10:30",
+  "ev": "buy",
+  "champ": "Diana",
+  "cost": 3
+ },
+ {
+  "t": "00:10:30",
+  "ev": "buy",
+  "champ": "Viktor",
+  "cost": 3
+ },
+ {
+  "t": "00:10:30",
+  "ev": "buy",
+  "champ": "Illaoi",
+  "cost": 3
+ },
+ {
+  "t": "00:10:30",
+  "ev": "buy",
+  "champ": "Talon",
+  "cost": 1
+ },
+ {
+  "t": "00:10:31",
+  "ev": "buy",
+  "champ": "Nasus",
+  "cost": 1
+ },
+ {
+  "t": "00:10:39",
+  "ev": "buy",
+  "champ": "Diana",
+  "cost": 3
+ },
+ {
+  "t": "00:10:39",
+  "ev": "buy",
+  "champ": "Viktor",
+  "cost": 3
+ },
+ {
+  "t": "00:10:39",
+  "ev": "buy",
+  "champ": "Illaoi",
+  "cost": 3
+ },
+ {
+  "t": "00:10:40",
+  "ev": "buy",
+  "champ": "Talon",
+  "cost": 1
+ },
+ {
+  "t": "00:10:40",
+  "ev": "buy",
+  "champ": "Nasus",
+  "cost": 1
+ },
+ {
+  "t": "00:10:42",
+  "ev": "buy",
+  "champ": "Riven",
+  "cost": 4
+ },
+ {
+  "t": "00:10:42",
+  "ev": "buy",
+  "champ": "Teemo",
+  "cost": 1
+ },
+ {
+  "t": "00:10:43",
+  "ev": "buy",
+  "champ": "Illaoi",
+  "cost": 3
+ },
+ {
+  "t": "00:10:43",
+  "ev": "buy",
+  "champ": "Talon",
+  "cost": 1
+ },
+ {
+  "t": "00:10:43",
+  "ev": "buy",
+  "champ": "Nasus",
+  "cost": 1
+ },
+ {
+  "t": "00:10:51",
+  "ev": "buy",
+  "champ": "Riven",
+  "cost": 4
+ },
+ {
+  "t": "00:10:51",
+  "ev": "buy",
+  "champ": "Vex",
+  "cost": 5
+ },
+ {
+  "t": "00:10:52",
+  "ev": "buy",
+  "champ": "Pyke",
+  "cost": 2
+ },
+ {
+  "t": "00:10:52",
+  "ev": "buy",
+  "champ": "Urgot",
+  "cost": 3
+ },
+ {
+  "t": "00:10:54",
+  "ev": "buy",
+  "champ": "Riven",
+  "cost": 4
+ },
+ {
+  "t": "00:10:55",
+  "ev": "buy",
+  "champ": "Vex",
+  "cost": 5
+ },
+ {
+  "t": "00:10:55",
+  "ev": "buy",
+  "champ": "Pyke",
+  "cost": 2
+ },
+ {
+  "t": "00:10:55",
+  "ev": "buy",
+  "champ": "Urgot",
+  "cost": 3
+ },
+ {
+  "t": "00:11:03",
+  "ev": "buy",
+  "champ": "Vex",
+  "cost": 5
+ },
+ {
+  "t": "00:11:03",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:11:05",
+  "ev": "buy",
+  "champ": "Vex",
+  "cost": 5
+ },
+ {
+  "t": "00:11:05",
+  "ev": "buy",
+  "champ": "Teemo",
+  "cost": 1
+ },
+ {
+  "t": "00:11:06",
+  "ev": "buy",
+  "champ": "Teemo",
+  "cost": 1
+ },
+ {
+  "t": "00:11:12",
+  "ev": "game_over",
+  "placement": 7
+ }
+]

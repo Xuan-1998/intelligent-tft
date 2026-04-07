@@ -1,0 +1,16 @@
+[
+ {
+  "t": "00:06:14",
+  "ev": "startup",
+  "round": "3-5",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "00:06:14",
+  "ev": "round",
+  "round": "3-5",
+  "level": 7,
+  "phase": "EARLY"
+ }
+]

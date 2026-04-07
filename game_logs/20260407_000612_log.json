@@ -1,0 +1,139 @@
+[
+ {
+  "t": "00:06:12",
+  "ev": "startup",
+  "round": "3-5",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "00:06:12",
+  "ev": "round",
+  "round": "3-5",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "00:06:47",
+  "ev": "god"
+ },
+ {
+  "t": "00:06:53",
+  "ev": "god"
+ },
+ {
+  "t": "00:06:58",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:06:58",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:06:58",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:07:04",
+  "ev": "round",
+  "round": "3-6",
+  "level": 7,
+  "phase": "EARLY"
+ },
+ {
+  "t": "00:07:06",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:07:06",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:07:06",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:07:13",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:07:13",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:07:14",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:07:21",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:07:21",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:07:28",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:07:28",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:07:28",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:07:35",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:07:35",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:07:36",
+  "ev": "buy",
+  "champ": "Milio",
+  "cost": 2
+ },
+ {
+  "t": "00:07:43",
+  "ev": "buy",
+  "champ": "Teemo",
+  "cost": 1
+ }
+]
