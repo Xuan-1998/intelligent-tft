@@ -1,0 +1,44 @@
+# CORAL Task Config for Intelligent TFT
+task:
+  name: intelligent-tft
+  description: |
+    Evolve a TFT (Teamfight Tactics) bot that plays Set 17: Space Gods on macOS.
+    
+    The bot in agent.py controls the game via screen capture + mouse/keyboard automation.
+    It reads game state from the Riot Live Client API (gold, level, HP) and OCR (shop champions).
+    
+    Your goal: modify agent.py and comps.py to improve the bot's gameplay strategy.
+    The grader runs a full TFT game and scores based on placement (1st=8pts, 8th=1pt).
+    
+    Key files to modify:
+    - agent.py: Main game loop, decision logic, timing
+    - comps.py: Team composition, champion priorities, item builds
+    
+    Key constraints:
+    - Game runs on macOS with 1728x1004 window
+    - Screen coordinates are pre-calibrated (don't change screen_coords.py)
+    - Riot API at https://127.0.0.1:2999 gives gold/level/HP
+    - OCR reads shop champion names (fuzzy matched)
+    - Items are on far-left vertical column, click-to-pickup then click-on-champion
+    - God selection at rounds 2-4, 3-4, 4-4: click (W*0.30, Y_OFF+EFF_H*0.25)
+    - Augments: click first option at (W*0.30, Y_OFF+EFF_H*0.45)
+    - Take All popup: click (W*0.57, Y_OFF+EFF_H*0.71)
+    
+    Current strategy: Mecha Fast 8
+    - Early (1-1→3-7): Buy cheap frontline, save gold to 50+
+    - Mid (4-1): Level to 8, roll for AurelionSol/TahmKench/Karma
+    - Late: Upgrade units, level 9
+
+grader:
+  type: function
+  module: eval.grader
+
+agents:
+  count: 1
+  runtime: claude_code
+  model: claude-sonnet-4-6
+  max_turns: 50
+
+workspace:
+  results_dir: "./results"
+  repo_path: "./coral_task/seed"
