@@ -179,12 +179,13 @@ def reroll_shop():
     click(*REROLL, 0.2)
 
 def place_bench_to_board():
-    """Move bench units to board using click-click with proper delays"""
-    for i in range(9):
-        # Click bench slot to pick up
+    """Move bench units to board — only if board has room"""
+    level = api_level()
+    if level <= 0: level = 8
+    # Try to place up to (level) units, stop if board is full
+    for i in range(min(9, level)):
         pyautogui.click(*BENCH[i])
         time.sleep(0.3)
-        # Click board slot to place
         pyautogui.click(*BOARD[21 + (i % 7)])
         time.sleep(0.3)
 
@@ -219,7 +220,21 @@ print(f"═══ TFT Agent v4 | {GID} ═══")
 econ_target = get_econ_threshold()
 print(f"Econ target: {econ_target}g | Window: {W}x{H} at ({x},{y})")
 
-phase = "EARLY"
+# Detect current game state on startup
+init_rnd = read_round()
+init_level = api_level()
+init_gold = read_gold()
+init_stage = int(init_rnd[0]) if init_rnd and init_rnd[0].isdigit() else 0
+
+if init_stage >= 5 or (init_stage >= 4 and init_level >= 8):
+    phase = "LATEGAME"
+elif init_stage >= 4:
+    phase = "ROLLDOWN"
+else:
+    phase = "EARLY"
+
+print(f"Start: R{init_rnd} G:{init_gold} Lvl:{init_level} → {phase}")
+log("startup", round=init_rnd, gold=init_gold, level=init_level, phase=phase)
 last_rnd = ""
 cycle = 0
 buys_total = 0
@@ -298,12 +313,15 @@ try:
                 reroll_shop()
                 shop = read_shop()
                 for i, ch in enumerate(shop):
-                    if ch and ch in targets:
-                        cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                        if cost <= (read_gold() or 0):
-                            buy_champion(i); found.append(ch)
-                            print(f"  🎯 {ch} ({cost}g)")
-                            log("buy", champ=ch, cost=cost)
+                    if not ch: continue
+                    cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
+                    g = read_gold()
+                    if g < 0 or cost > g: continue
+                    # Buy targets + any 4/5-cost (strong at lvl 8)
+                    if ch in targets or cost >= 4:
+                        buy_champion(i); found.append(ch)
+                        print(f"  🎯 {ch} ({cost}g)")
+                        log("buy", champ=ch, cost=cost)
                 rolls += 1
 
             place_bench_to_board()
