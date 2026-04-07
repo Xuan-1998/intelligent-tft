@@ -1,6 +1,7 @@
 #!/usr/bin/env python3 -u
-"""TFT Agent v4 — calibrated OCR + API level, Mecha Fast 8, evolution log
-Press Cmd+= to stop at any time.
+"""TFT Agent v5 — action-first, no gold gating.
+Just buy good units (game rejects if you can't afford), always place, always loot.
+Press Cmd+= to stop.
 """
 import warnings; warnings.filterwarnings("ignore")
 import os, sys, json, time, re
@@ -9,34 +10,18 @@ os.environ["PYTHONWARNINGS"] = "ignore"
 import pyautogui
 import requests, urllib3; urllib3.disable_warnings()
 from difflib import SequenceMatcher
-from pynput import keyboard
 
 from vec4 import Vec4
 from vec2 import Vec2
 from game import find_league_window
 import screen_coords, ocr, game_assets, comps
 
-# ── Cmd+= global stop ──
+# ── Stop via Ctrl+C ──
 RUNNING = True
-_keys = set()
-def _on_press(key):
-    global RUNNING
-    _keys.add(key)
-    if (keyboard.Key.cmd in _keys or keyboard.Key.cmd_r in _keys):
-        try:
-            if hasattr(key, 'char') and key.char == '=':
-                RUNNING = False
-                print("\n🛑 Cmd+= pressed — stopping after this cycle")
-                return False
-        except: pass
-def _on_release(key):
-    _keys.discard(key)
-keyboard.Listener(on_press=_on_press, on_release=_on_release, daemon=True).start()
 
-# ── Window setup ──
+# ── Window ──
 w = find_league_window()
-if not w:
-    print("NO GAME WINDOW"); sys.exit(1)
+if not w: print("NO GAME WINDOW"); sys.exit(1)
 x, y, W, H = w
 Y_OFF = y + round(H * 0.028)
 EFF_H = H - round(H * 0.028)
@@ -44,7 +29,7 @@ Vec4.setup_screen(x, Y_OFF, W, EFF_H)
 Vec2.setup_screen(x, Y_OFF, W, EFF_H)
 pyautogui.FAILSAFE = False
 
-# ── Precompute coords ──
+# ── Coords ──
 BUY = [b.get_coords() for b in screen_coords.BUY_LOC]
 BENCH = [b.get_coords() for b in screen_coords.BENCH_LOC]
 BOARD = [b.get_coords() for b in screen_coords.BOARD_LOC]
@@ -53,13 +38,6 @@ REROLL = screen_coords.REFRESH_LOC.get_coords()
 DEFAULT = screen_coords.DEFAULT_LOC.get_coords()
 AUG_LOC = [a.get_coords() for a in screen_coords.AUGMENT_LOC]
 ALL_C = set(game_assets.CHAMPIONS.keys())
-
-# ── Calibrated OCR boxes (absolute screen coords for 1728x1002 window at 0,33) ──
-# These are hardcoded to the actual pixel positions on this display.
-# Gold number (right of coin icon in bottom HUD)
-GOLD_BOX = (830, 845, 890, 885)
-# Round indicator (top center bar, e.g. "3-1")
-ROUND_BOX = (640, 72, 740, 102)
 
 # ── Logging ──
 LOG_DIR = os.path.expanduser("~/intelligent-tft/game_logs")
@@ -70,20 +48,9 @@ HISTORY_FILE = os.path.expanduser("~/intelligent-tft/game_history.jsonl")
 
 def log(ev, **kw):
     LOG.append({"t": time.strftime("%H:%M:%S"), "ev": ev, **kw})
-    # Screenshot on key events
-    if ev in ("round", "god", "augment", "game_over", "phase", "rolldown"):
-        try:
-            ocr._grab((0, 33, 1728, 1035)).save(f"{LOG_DIR}/{GID}_{ev}_{len(LOG)}.png")
+    if ev in ("round", "game_over", "phase"):
+        try: ocr._grab((0, 33, 1728, 1035)).save(f"{LOG_DIR}/{GID}_{ev}_{len(LOG)}.png")
         except: pass
-
-def log_state(gold, level, rnd, phase, cycle, shop=None, action=None):
-    """Detailed state log for evolution review"""
-    entry = {"t": time.strftime("%H:%M:%S"), "ev": "tick",
-             "gold": gold, "level": level, "round": rnd,
-             "phase": phase, "cycle": cycle}
-    if shop: entry["shop"] = [s for s in shop if s]
-    if action: entry["action"] = action
-    LOG.append(entry)
 
 def save_log():
     with open(f"{LOG_DIR}/{GID}_log.json", "w") as f:
@@ -94,12 +61,7 @@ def save_history(placement):
         f.write(json.dumps({"time": time.strftime("%Y-%m-%d %H:%M"), "gid": GID,
                              "placement": placement, "events": len(LOG)}) + "\n")
 
-def load_history():
-    if not os.path.exists(HISTORY_FILE): return []
-    with open(HISTORY_FILE) as f:
-        return [json.loads(l) for l in f if l.strip()]
-
-# ── API helpers ──
+# ── API ──
 def api_data():
     try:
         return requests.get("https://127.0.0.1:2999/liveclientdata/allgamedata",
@@ -119,7 +81,7 @@ def api_alive():
             return False, sum(1 for pl in d["allPlayers"] if not pl.get("isDead")) + 1
     return True, 0
 
-# ── OCR helpers ──
+# ── OCR ──
 def fuzzy(t):
     if not t or len(t) < 2: return None
     best, score = None, 0
@@ -128,18 +90,15 @@ def fuzzy(t):
         if sc > score: best, score = n, sc
     return best if score >= 0.55 else None
 
-def read_gold():
-    try:
-        t = ocr.get_text(GOLD_BOX, 3, 7, '0123456789')
-        return int(t) if t and t.isdigit() else -1
-    except: return -1
-
 def read_round():
-    try:
-        t = ocr.get_text(ROUND_BOX, 3, 7, ocr.ROUND_WHITELIST)
-        m = re.search(r'([1-7])-([1-7])', t or "")
-        return m.group(0) if m else ""
-    except: return ""
+    """Try multiple boxes for round — OCR is finicky"""
+    for box in [(640, 72, 740, 102), (640, 75, 740, 100), (650, 75, 730, 100)]:
+        try:
+            t = ocr.get_text(box, 3, 7, ocr.ROUND_WHITELIST)
+            m = re.search(r'([1-7])-([1-7])', t or "")
+            if m: return m.group(0)
+        except: pass
+    return ""
 
 def read_shop():
     try:
@@ -169,8 +128,9 @@ def detect_popup():
 def click(cx, cy, delay=0.15):
     pyautogui.click(cx, cy); time.sleep(delay)
 
-def buy_champion(slot_idx):
-    click(*BUY[slot_idx], 0.25)
+def buy_slot(i):
+    """Click buy slot — game will reject if can't afford, that's fine"""
+    click(*BUY[i], 0.25)
 
 def buy_xp():
     click(*BUY_XP, 0.15)
@@ -179,20 +139,22 @@ def reroll_shop():
     click(*REROLL, 0.2)
 
 def place_bench_to_board():
-    """Move bench units to board — only if board has room"""
+    """Tanks front (row 0-6), carries back (row 21-27)"""
     level = api_level()
     if level <= 0: level = 8
-    # Try to place up to (level) units, stop if board is full
+    # First 4 slots → front row (tanks), next slots → back row (carries)
+    front = [0, 1, 2, 3, 4, 5, 6]
+    back = [21, 22, 23, 24, 25, 26, 27]
+    positions = front[:4] + back[:5]
     for i in range(min(9, level)):
-        pyautogui.click(*BENCH[i])
-        time.sleep(0.3)
-        pyautogui.click(*BOARD[21 + (i % 7)])
-        time.sleep(0.3)
+        pyautogui.click(*BENCH[i]); time.sleep(0.3)
+        pyautogui.click(*BOARD[positions[i]]); time.sleep(0.3)
 
 def pickup_loot():
-    for ly in range(300, 650, 60):
-        for lx in range(400, 1400, 80):
-            pyautogui.rightClick(lx, ly); time.sleep(0.02)
+    """Sweep the board for orbs"""
+    for ly in range(250, 700, 50):
+        for lx in range(350, 1450, 70):
+            pyautogui.rightClick(lx, ly); time.sleep(0.015)
 
 def handle_popup():
     popup = detect_popup()
@@ -206,42 +168,40 @@ def handle_popup():
         log("augment"); return True
     return False
 
-# ── Evolution ──
-def get_econ_threshold():
-    hist = load_history()
-    if len(hist) < 3: return 50
-    avg = sum(g["placement"] for g in hist[-5:]) / min(len(hist), 5)
-    if avg > 5: return 30
-    if avg < 3: return 60
-    return 50
+# ── Target lists ──
+# Everything we want to buy, by priority
+ALWAYS_BUY = comps.ROLLDOWN_BUYS | comps.EARLY_GAME_BUYS
+# Cheap units good for early board
+EARLY_CHEAP = {n for n in comps.EARLY_GAME_BUYS
+               if game_assets.CHAMPIONS.get(n, {}).get("Gold", 99) <= 2}
 
-# ── Main loop ──
-print(f"═══ TFT Agent v4 | {GID} ═══")
-econ_target = get_econ_threshold()
-print(f"Econ target: {econ_target}g | Window: {W}x{H} at ({x},{y})")
+# ═══ MAIN ═══
+print(f"═══ TFT Agent v5 | {GID} ═══")
+print(f"Window: {W}x{H} at ({x},{y})")
 
-# Detect current game state on startup
-init_rnd = read_round()
-init_level = api_level()
-init_gold = read_gold()
-init_stage = int(init_rnd[0]) if init_rnd and init_rnd[0].isdigit() else 0
+level = api_level()
+rnd = read_round()
+stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
 
-if init_stage >= 5 or (init_stage >= 4 and init_level >= 8):
+if stage >= 5 or (stage >= 4 and level >= 8):
     phase = "LATEGAME"
-elif init_stage >= 4:
+elif stage >= 4:
     phase = "ROLLDOWN"
 else:
     phase = "EARLY"
 
-print(f"Start: R{init_rnd} G:{init_gold} Lvl:{init_level} → {phase}")
-log("startup", round=init_rnd, gold=init_gold, level=init_level, phase=phase)
+print(f"Start: R{rnd} Lvl:{level} → {phase}")
+log("startup", round=rnd, level=level, phase=phase)
+
 last_rnd = ""
 cycle = 0
-buys_total = 0
 start_time = time.time()
+last_place_cycle = -10
+rolldown_done = False
 
 try:
     while RUNNING:
+        # ── Alive check ──
         alive, placement = api_alive()
         if not alive:
             print(f"\n☠️ Game over! Placement: {placement}")
@@ -249,113 +209,122 @@ try:
             save_history(placement)
             break
 
-        gold = read_gold()
         level = api_level()
         rnd = read_round()
         stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
 
         if rnd and rnd != last_rnd:
             elapsed = int(time.time() - start_time)
-            print(f"\n[R{rnd}] G:{gold} Lvl:{level} {phase} ({elapsed}s)")
-            log("round", round=rnd, gold=gold, level=level, phase=phase)
+            print(f"\n[R{rnd}] Lvl:{level} {phase} ({elapsed}s)")
+            log("round", round=rnd, level=level, phase=phase)
             last_rnd = rnd
 
-        # Log state every 5 cycles for evolution review
-        if cycle % 5 == 0:
-            log_state(gold, level, rnd, phase, cycle)
-
-        # ── Popups ──
+        # ── Always handle popups ──
         if handle_popup():
             time.sleep(1); pickup_loot()
             cycle += 1; continue
 
-        # ── Loot on PvE starts ──
-        if rnd and rnd.endswith("-1") and cycle % 4 == 0:
+        # ── Always pick up loot every few cycles ──
+        if cycle % 6 == 0:
             pickup_loot()
 
-        # ── Phase transitions (only roll down at stage 4+) ──
+        # ── Phase transitions ──
         if phase == "EARLY" and stage >= 4:
             phase = "ROLLDOWN"
-            print(f"\n🎯 → ROLLDOWN (g={gold} lvl={level})")
+            print(f"\n🎯 → ROLLDOWN")
             log("phase", phase="ROLLDOWN")
+            rolldown_done = False
 
-        # ── EARLY: save gold, only buy 1-cost frontline if it won't break econ ──
+        if phase == "ROLLDOWN" and rolldown_done:
+            phase = "LATEGAME"
+            print(f"\n🏆 → LATEGAME")
+
+        # ═══ EARLY: econ first, buy only 1-cost from target list ═══
         if phase == "EARLY":
-            shop = read_shop()
-            for i, ch in enumerate(shop):
-                if not ch: continue
-                cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                if gold < 0 or cost > gold: continue
-                # Only buy 1-cost units, and only if we stay above interest threshold
-                # Interest breakpoints: 10,20,30,40,50
-                next_threshold = ((gold // 10)) * 10
-                if ch in comps.EARLY_GAME_BUYS and cost == 1 and gold - cost >= next_threshold:
-                    buy_champion(i); gold -= cost; buys_total += 1
-                    print(f"  💰 {ch} ({cost}g) [g→{gold}]")
-                    log("buy", champ=ch, cost=cost)
+            # Only read shop + buy once every 2 cycles to avoid spam
+            if cycle % 2 == 0:
+                shop = read_shop()
+                bought = False
+                for i, ch in enumerate(shop):
+                    if not ch: continue
+                    cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
+                    if ch in EARLY_CHEAP and cost <= 1:
+                        buy_slot(i)
+                        bought = True
+                        print(f"  💰 {ch} ({cost}g)")
+                        log("buy", champ=ch, cost=cost)
 
-            if buys_total > 0 and cycle % 3 == 0:
-                place_bench_to_board()
+                if bought or (cycle - last_place_cycle >= 6):
+                    place_bench_to_board()
+                    last_place_cycle = cycle
 
-            # No XP buying in early game — pure econ
+            # Buy XP sparingly in stage 3
+            if stage >= 3 and level < 6 and cycle % 6 == 0:
+                buy_xp()
+                print(f"  📈 XP (lvl {level})")
 
-        # ── ROLLDOWN: level 8, roll for carries ──
-        elif phase == "ROLLDOWN":
-            xp_count = 0
-            while RUNNING and api_level() < 8 and read_gold() > 4:
+        # ═══ ROLLDOWN: level to 8, roll for carries ═══
+        elif phase == "ROLLDOWN" and not rolldown_done:
+            # Level to 8
+            prev_lvl = api_level()
+            xp_count, stall = 0, 0
+            while RUNNING and api_level() < 8:
                 buy_xp(); xp_count += 1
-                if xp_count > 20: break
-            print(f"  Level: {api_level()}")
+                time.sleep(0.15)
+                if api_level() == prev_lvl:
+                    stall += 1
+                    if stall > 5: break  # no gold to buy XP
+                else:
+                    prev_lvl = api_level(); stall = 0
+                if xp_count > 30: break
+            print(f"  Leveled to {api_level()} ({xp_count} xp buys)")
 
-            targets = comps.ROLLDOWN_BUYS | comps.EARLY_GAME_BUYS
-            rolls, found = 0, []
-            while RUNNING and read_gold() > 10 and rolls < 30:
+            # Roll and buy everything good
+            found = []
+            for roll in range(20):
+                if not RUNNING: break
                 reroll_shop()
                 shop = read_shop()
                 for i, ch in enumerate(shop):
                     if not ch: continue
                     cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                    g = read_gold()
-                    if g < 0 or cost > g: continue
-                    # Buy targets + any 4/5-cost (strong at lvl 8)
-                    if ch in targets or cost >= 4:
-                        buy_champion(i); found.append(ch)
+                    if ch in ALWAYS_BUY or cost >= 4:
+                        buy_slot(i)
+                        found.append(ch)
                         print(f"  🎯 {ch} ({cost}g)")
                         log("buy", champ=ch, cost=cost)
-                rolls += 1
 
             place_bench_to_board()
-            print(f"  Rolled {rolls}x, found: {found}")
-            log("rolldown", rolls=rolls, found=found)
-            phase = "LATEGAME"
-            print(f"\n🏆 → LATEGAME")
+            print(f"  Rolldown: {len(found)} units bought")
+            log("rolldown", found=found)
+            rolldown_done = True
 
-        # ── LATEGAME: upgrade + level 9 ──
+        # ═══ LATEGAME: opportunistic buys + level 9 ═══
         elif phase == "LATEGAME":
-            g = read_gold()
-            if g > 30:
-                reroll_shop()
-                shop = read_shop()
-                targets = comps.ROLLDOWN_BUYS | comps.EARLY_GAME_BUYS
-                for i, ch in enumerate(shop):
-                    if ch and ch in targets:
-                        cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                        if cost <= g:
-                            buy_champion(i); g -= cost
-                            print(f"  ⬆️ {ch} ({cost}g)")
-                            log("buy", champ=ch, cost=cost)
+            shop = read_shop()
+            for i, ch in enumerate(shop):
+                if not ch: continue
+                cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
+                if ch in ALWAYS_BUY or cost >= 4:
+                    buy_slot(i)
+                    print(f"  ⬆️ {ch} ({cost}g)")
+                    log("buy", champ=ch, cost=cost)
+
+            if cycle % 4 == 0:
                 place_bench_to_board()
-            if g > 60 and api_level() < 9:
-                buy_xp(); print("  📈 XP→9")
 
-        # ── Periodic: dismiss stray popups ──
-        if cycle % 10 == 0 and cycle > 0:
-            pyautogui.click(W // 2, Y_OFF + EFF_H // 2)
-            time.sleep(0.3)
+            # Try to level to 9 occasionally
+            if level < 9 and cycle % 5 == 0:
+                buy_xp()
 
+            # Reroll occasionally with spare gold
+            if cycle % 3 == 0:
+                reroll_shop()
+
+        # ── Reset mouse ──
         pyautogui.moveTo(*DEFAULT)
         cycle += 1
-        time.sleep(1.5)
+        time.sleep(1.2)
 
 except KeyboardInterrupt:
     print("\n🛑 Stopped")
@@ -363,7 +332,3 @@ finally:
     save_log()
     elapsed = int(time.time() - start_time)
     print(f"📝 {LOG_DIR}/{GID}_log.json ({len(LOG)} events, {elapsed}s)")
-    hist = load_history()
-    if hist:
-        recent = hist[-5:]
-        print(f"📊 Last {len(recent)} games avg: {sum(g['placement'] for g in recent)/len(recent):.1f}")
