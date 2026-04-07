@@ -128,8 +128,22 @@ def click_popup():
     pyautogui.click(W//2, Y_OFF+EFF_H//2); time.sleep(0.3)
 
 def click_left_option():
-    """Click left option for god selection"""
-    pyautogui.click(int(W*0.30), Y_OFF+int(EFF_H*0.45)); time.sleep(0.5)
+    """Click left god blessing — confirmed working at 30% x, 25% y"""
+    pyautogui.click(int(W*0.30), int(Y_OFF+EFF_H*0.25)); time.sleep(0.5)
+
+def is_god_screen():
+    """Detect god selection by checking if the normal board is NOT visible.
+    During god screen, the shop area is hidden."""
+    try:
+        txt = ocr.get_text(screenxy=(600,120,870,170), scale=3, psm=7)
+        # No 'Planning' and no round timer visible = likely god/special screen
+        if 'lanning' in txt: return False
+        # Check if shop is visible
+        shop_img = ocr._grab(screen_coords.SHOP_POS.get_coords())
+        crop = shop_img.crop(screen_coords.CHAMP_NAME_POS[0].get_coords())
+        raw = ocr.get_text_from_image(crop).strip()
+        return len(raw) < 2  # shop not readable = god screen or combat
+    except: return False
 
 # ── Main Loop ──
 phase = "ECON"
@@ -145,7 +159,14 @@ try:
 
         # ── Combat phase: do nothing, just wait ──
         if not planning:
-            time.sleep(1.5); cycle+=1; continue
+            # But check if it's a god screen (not combat, not planning)
+            if is_god_screen():
+                print("  ⚡ God screen! Clicking left god")
+                click_left_option()
+                time.sleep(2)
+                click_popup()  # collect rewards
+                time.sleep(1)
+            time.sleep(1); cycle+=1; continue
 
         # ── Planning phase: act! ──
 
