@@ -72,9 +72,8 @@ def api():
         return _api_cache["data"]
 
 def api_gold():
-    d = api()
-    try: return int(d["activePlayer"]["currentGold"])
-    except: return 0
+    """API gold is cumulative/broken — return -1 to signal unknown"""
+    return -1
 
 def api_level():
     d = api()
@@ -246,8 +245,8 @@ elif stage >= 4 or lvl >= 7:
 else:
     phase = "EARLY"
 
-print(f"Start: R{rnd} Lvl:{lvl} Gold:{api_gold()} HP:{api_health()} → {phase}")
-log("startup", round=rnd, level=lvl, phase=phase, gold=api_gold(), hp=api_health())
+print(f"Start: R{rnd} Lvl:{lvl} Gold:{0} HP:{api_health()} → {phase}")
+log("startup", round=rnd, level=lvl, phase=phase, gold=0, hp=api_health())
 
 last_rnd = ""; cycle = 0; start = time.time()
 rolldown_done = False
@@ -264,7 +263,7 @@ try:
             break
 
         lvl = api_level()
-        gold = api_gold()
+        gold = 0
         hp = api_health()
         rnd = read_round()
         stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
@@ -301,24 +300,23 @@ try:
                 smart_buy(shop, gold, phase)
                 place_bench_to_board()
 
-        # ═══ EARLY: econ to 50g, buy only what we need ═══
+        # ═══ EARLY: save gold for interest, buy sparingly ═══
         if phase == "EARLY":
-            gold = api_gold()
-            shop = read_shop()
+            # Stage 1: buy all 5 slots (need units for PvE)
+            if stage <= 1:
+                for i in range(5): buy_slot(i)
+            else:
+                # Stage 2-3: only buy comp units, don't waste gold
+                shop = read_shop()
+                for i, ch in enumerate(shop):
+                    if ch and ch in comps.EARLY_GAME_BUYS:
+                        cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
+                        if cost <= 2: buy_slot(i)
 
-            # Only buy comp units or cheap pairs — preserve econ
-            if gold > 10 or any(ch in comps.EARLY_GAME_BUYS for ch in shop if ch):
-                bought, gold = smart_buy(shop, gold, phase)
-                if bought:
-                    print(f"  🛒 Bought: {bought} (gold→{api_gold()})")
-                    log("buy", champs=bought)
+            # Buy XP sparingly in stage 3
+            if stage >= 3 and lvl < 7 and cycle % 8 == 0:
+                buy_xp()
 
-            # Buy XP at stage 3+ but only above 50g (preserve interest)
-            if stage >= 3 and lvl < 7 and gold > 52 and cycle % 4 == 0:
-                buy_xp(); buy_xp()
-                print(f"  📈 XP (lvl→{api_level()} gold→{api_gold()})")
-
-            # Place units periodically
             if cycle % 5 == 0: place_bench_to_board()
             if cycle % 8 == 0: slam_items()
 
@@ -326,40 +324,30 @@ try:
         elif phase == "ROLLDOWN" and not rolldown_done:
             print("  🎰 ROLLDOWN START")
 
-            # Level to 8 first
+            # Level to 8 — just spam buy XP
             ct = 0
-            while RUNNING and api_level() < 8 and ct < 30:
-                g = api_gold()
-                if g < 4: break
-                buy_xp(); ct += 1; time.sleep(0.1)
-            print(f"  Leveled to {api_level()} (gold→{api_gold()})")
+            while RUNNING and api_level() < 8 and ct < 40:
+                buy_xp(); ct += 1; time.sleep(0.08)
+            print(f"  Leveled to {api_level()}")
 
-            # Roll for carries
-            found = []
+            # Roll and blind-buy 20 times
             for roll in range(20):
                 if not RUNNING: break
-                g = api_gold()
-                if g < 6: break  # keep some gold
                 reroll_shop()
-                shop = read_shop()
-                bought, g = smart_buy(shop, g, phase)
-                found.extend(bought)
+                for i in range(5): buy_slot(i)
 
             place_bench_to_board(); slam_items()
-            print(f"  Rolldown result: {found} (gold→{api_gold()})")
-            log("rolldown", found=found, gold=api_gold())
+            print(f"  Rolldown done")
+            log("rolldown")
             rolldown_done = True
 
-        # ═══ LATEGAME: maintain board, occasional upgrades ═══
+        # ═══ LATEGAME: buy all, occasional reroll ═══
         elif phase == "LATEGAME":
-            gold = api_gold()
-            # Only buy if we have spare gold above interest threshold
-            if gold > 20 or hp < 30:
-                shop = read_shop()
-                bought, _ = smart_buy(shop, gold, phase)
-                if bought:
-                    print(f"  🛒 {bought} (gold→{api_gold()})")
-                    place_bench_to_board()
+            for i in range(5): buy_slot(i)
+            if cycle % 4 == 0: place_bench_to_board()
+            if cycle % 6 == 0: reroll_shop()
+            if lvl < 9 and cycle % 10 == 0: buy_xp()
+            if cycle % 8 == 0: slam_items()
 
             # Reroll occasionally if rich or desperate
             if (gold > 50 or hp < 20) and cycle % 4 == 0:
