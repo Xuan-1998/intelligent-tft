@@ -160,22 +160,22 @@ cycle = 0
 try:
     while RUNNING:
         g = gold(); lv = level()
-        planning = is_planning()
 
         if cycle%3==0:
-            status = "⏳COMBAT" if not planning else "📋PLAN"
-            print(f"[{phase}|{status}] C{cycle} G:{g} L:{lv}")
+            print(f"[{phase}] C{cycle} G:{g} L:{lv}")
 
-        # ── Combat phase: do nothing, just wait ──
-        if not planning:
-            # But check if it's a god screen (not combat, not planning)
-            if is_god_screen():
-                print("  ⚡ God screen! Clicking left god")
-                click_left_option()
-                time.sleep(2)
-                click_popup()  # collect rewards
-                time.sleep(1)
-            time.sleep(1); cycle+=1; continue
+        # ── Try to act regardless of phase ──
+        # During combat, shop clicks won't work anyway (shop is locked)
+        # So it's safe to try buying — it just won't do anything during combat
+
+        # Check for god screen
+        if is_god_screen():
+            print("  ⚡ God screen! Clicking left god")
+            click_left_option()
+            time.sleep(2)
+            click_popup()
+            time.sleep(1)
+            cycle+=1; continue
 
         # ── Planning phase: act! ──
 
