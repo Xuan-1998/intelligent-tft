@@ -50,6 +50,11 @@ HISTORY_FILE = os.path.expanduser("~/intelligent-tft/game_history.jsonl")
 
 def log(ev, **kw):
     LOG.append({"t": time.strftime("%H:%M:%S"), "ev": ev, **kw})
+    # Screenshot on key events
+    if ev in ("round", "god", "augment", "game_over", "phase", "rolldown"):
+        try:
+            ocr._grab((0, 33, 1728, 1035)).save(f"{LOG_DIR}/{GID}_{ev}_{len(LOG)}.png")
+        except: pass
 
 def save_log():
     with open(f"{LOG_DIR}/{GID}_log.json", "w") as f:
