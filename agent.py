@@ -150,15 +150,14 @@ def place_bench_to_board():
         pyautogui.click(*BOARD[positions[i]]); time.sleep(0.3)
 
 def pickup_loot():
-    """Sweep the board for orbs — STAY INSIDE game window"""
-    # Board area is roughly center of game window
-    y_start = Y_OFF + int(EFF_H * 0.25)
-    y_end = Y_OFF + int(EFF_H * 0.65)
-    x_start = x + int(W * 0.25)
-    x_end = x + int(W * 0.75)
-    for ly in range(y_start, y_end, 60):
-        for lx in range(x_start, x_end, 80):
-            pyautogui.rightClick(lx, ly); time.sleep(0.015)
+    """Quick sweep for orbs — stay inside game window"""
+    y_start = Y_OFF + int(EFF_H * 0.30)
+    y_end = Y_OFF + int(EFF_H * 0.60)
+    x_start = x + int(W * 0.30)
+    x_end = x + int(W * 0.70)
+    for ly in range(y_start, y_end, 80):
+        for lx in range(x_start, x_end, 100):
+            pyautogui.rightClick(lx, ly); time.sleep(0.01)
 
 def handle_popup():
     popup = detect_popup()
@@ -229,8 +228,8 @@ try:
             time.sleep(1); pickup_loot()
             cycle += 1; continue
 
-        # ── Always pick up loot every few cycles ──
-        if cycle % 6 == 0:
+        # ── Pick up loot every 10 cycles ──
+        if cycle % 10 == 0:
             pickup_loot()
 
         # ── Phase transitions ──
@@ -258,7 +257,7 @@ try:
                     print(f"  💰 {ch} ({cost}g)")
                     log("buy", champ=ch, cost=cost)
 
-            if bought or (cycle - last_place_cycle >= 6):
+            if bought or (cycle - last_place_cycle >= 4):
                 place_bench_to_board()
                 last_place_cycle = cycle
 
@@ -328,7 +327,7 @@ try:
         # ── Reset mouse ──
         pyautogui.moveTo(*DEFAULT)
         cycle += 1
-        time.sleep(1.2)
+        time.sleep(0.8)
 
 except KeyboardInterrupt:
     print("\n🛑 Stopped")
