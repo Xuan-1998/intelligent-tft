@@ -125,31 +125,31 @@ def detect_popup():
     except: pass
     return None
 
-# ── Actions ──
-def buy_slot(i): pyautogui.click(*BUY[i]); time.sleep(0.25)
-def buy_xp(): pyautogui.click(*BUY_XP); time.sleep(0.2)
-def reroll_shop(): pyautogui.click(*REROLL); time.sleep(0.25)
+# ── Actions (fast) ──
+def buy_slot(i): pyautogui.click(*BUY[i]); time.sleep(0.08)
+def buy_xp(): pyautogui.click(*BUY_XP); time.sleep(0.08)
+def reroll_shop(): pyautogui.click(*REROLL); time.sleep(0.08)
 
 def place_bench_to_board():
     lvl = api_level()
     if lvl <= 0: lvl = 8
     pos = [21, 22, 23, 24, 0, 1, 2, 3, 14]
     for i in range(min(9, lvl)):
-        pyautogui.click(*BENCH[i]); time.sleep(0.3)
-        pyautogui.click(*BOARD[pos[i]]); time.sleep(0.3)
+        pyautogui.click(*BENCH[i]); time.sleep(0.12)
+        pyautogui.click(*BOARD[pos[i]]); time.sleep(0.12)
 
 def pickup_loot():
-    for ly in range(Y_OFF + int(EFF_H*0.25), Y_OFF + int(EFF_H*0.65), 70):
-        for lx in range(x + int(W*0.25), x + int(W*0.75), 90):
-            pyautogui.rightClick(lx, ly); time.sleep(0.01)
+    for ly in range(Y_OFF + int(EFF_H*0.30), Y_OFF + int(EFF_H*0.60), 90):
+        for lx in range(x + int(W*0.30), x + int(W*0.70), 110):
+            pyautogui.rightClick(lx, ly); time.sleep(0.008)
 
 def handle_popup():
     p = detect_popup()
     if p == "god":
-        print("  🔮 God → left"); pyautogui.click(int(W*0.30), int(Y_OFF+EFF_H*0.25)); time.sleep(2)
+        print("  🔮 God"); pyautogui.click(int(W*0.30), int(Y_OFF+EFF_H*0.25)); time.sleep(1.5)
         log("god"); return True
     if p == "augment":
-        print("  ⭐ Augment → first"); pyautogui.click(*AUG_LOC[0]); time.sleep(2)
+        print("  ⭐ Aug"); pyautogui.click(*AUG_LOC[0]); time.sleep(1.5)
         log("augment"); return True
     return False
 
@@ -158,11 +158,10 @@ def slam_items():
     targets = [BOARD[0], BOARD[1], BOARD[21], BOARD[22], BOARD[2], BOARD[23], BOARD[3], BOARD[24], BOARD[14], BOARD[25]]
     for i, s in enumerate(slots):
         t = targets[i % len(targets)]
-        pyautogui.moveTo(*s); time.sleep(0.15)
-        pyautogui.mouseDown(); time.sleep(0.15)
-        pyautogui.moveTo(*t, duration=0.25)
-        time.sleep(0.1)
-        pyautogui.mouseUp(); time.sleep(0.15)
+        pyautogui.moveTo(*s); time.sleep(0.03)
+        pyautogui.mouseDown(); time.sleep(0.03)
+        pyautogui.moveTo(*t, duration=0.08)
+        pyautogui.mouseUp(); time.sleep(0.05)
 
 def scout_opponents():
     ts = time.strftime('%Y%m%d_%H%M%S')
@@ -251,14 +250,13 @@ try:
 
             if cycle % 4 == 0: place_bench_to_board()
             if cycle % 6 == 0: slam_items()
-            if not scouted and stage >= 3:
-                scout_opponents(); scouted = True
+            # Skip scouting — too slow
 
         # ═══ ROLLDOWN: level 8, roll for carries ═══
         elif phase == "ROLLDOWN" and planning:
             ct = 0
             while RUNNING and api_level() < 8 and ct < 40:
-                buy_xp(); ct += 1; time.sleep(0.15)
+                buy_xp(); ct += 1; time.sleep(0.08)
             print(f"  Leveled to {api_level()}")
 
             # Roll and blind-buy all slots 20 times
@@ -280,7 +278,7 @@ try:
             if lvl < 9 and cycle % 10 == 0: buy_xp()
             if cycle % 8 == 0: slam_items()
 
-        pyautogui.moveTo(*DEFAULT); cycle += 1; time.sleep(1.5)
+        pyautogui.moveTo(*DEFAULT); cycle += 1; time.sleep(0.5)
 
 except KeyboardInterrupt:
     print("\n🛑 Stopped")
