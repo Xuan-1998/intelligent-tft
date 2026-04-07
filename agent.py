@@ -139,13 +139,12 @@ def reroll_shop():
     click(*REROLL, 0.2)
 
 def place_bench_to_board():
-    """Tanks front (row 0-6), carries back (row 21-27)"""
+    """Place units: first 4 bench → front row (tanks), rest → back row (carries)
+    Board rows 21-27 (y=423) = FRONT (meets enemy first)
+    Board rows 0-6 (y=651) = BACK (safe for carries)"""
     level = api_level()
     if level <= 0: level = 8
-    # First 4 slots → front row (tanks), next slots → back row (carries)
-    front = [0, 1, 2, 3, 4, 5, 6]
-    back = [21, 22, 23, 24, 25, 26, 27]
-    positions = front[:4] + back[:5]
+    positions = [21, 22, 23, 24, 0, 1, 2, 3, 14]
     for i in range(min(9, level)):
         pyautogui.click(*BENCH[i]); time.sleep(0.3)
         pyautogui.click(*BOARD[positions[i]]); time.sleep(0.3)
@@ -244,23 +243,23 @@ try:
             phase = "LATEGAME"
             print(f"\n🏆 → LATEGAME")
 
-        # ═══ EARLY: buy good units, place them ═══
+        # ═══ EARLY: econ first, buy 1-cost only, every 2 cycles ═══
         if phase == "EARLY":
-            shop = read_shop()
-            bought = False
-            for i, ch in enumerate(shop):
-                if not ch: continue
-                cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                # Buy any unit in our target list up to 3g
-                if (ch in ALWAYS_BUY and cost <= 3) or ch in EARLY_CHEAP:
-                    buy_slot(i)
-                    bought = True
-                    print(f"  💰 {ch} ({cost}g)")
-                    log("buy", champ=ch, cost=cost)
+            if cycle % 2 == 0:
+                shop = read_shop()
+                bought = False
+                for i, ch in enumerate(shop):
+                    if not ch: continue
+                    cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
+                    if ch in EARLY_CHEAP and cost <= 1:
+                        buy_slot(i)
+                        bought = True
+                        print(f"  💰 {ch} ({cost}g)")
+                        log("buy", champ=ch, cost=cost)
 
-            if bought or (cycle - last_place_cycle >= 4):
-                place_bench_to_board()
-                last_place_cycle = cycle
+                if bought or (cycle - last_place_cycle >= 6):
+                    place_bench_to_board()
+                    last_place_cycle = cycle
 
             # Buy XP sparingly in stage 3
             if stage >= 3 and level < 6 and cycle % 6 == 0:

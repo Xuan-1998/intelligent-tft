@@ -1,0 +1,46 @@
+[
+ {
+  "t": "23:58:34",
+  "ev": "startup",
+  "round": "2-5",
+  "level": 6,
+  "phase": "EARLY"
+ },
+ {
+  "t": "23:58:34",
+  "ev": "round",
+  "round": "2-5",
+  "level": 6,
+  "phase": "EARLY"
+ },
+ {
+  "t": "23:58:48",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:58:56",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:59:04",
+  "ev": "buy",
+  "champ": "Leona",
+  "cost": 1
+ },
+ {
+  "t": "23:59:11",
+  "ev": "round",
+  "round": "2-6",
+  "level": 6,
+  "phase": "EARLY"
+ },
+ {
+  "t": "23:59:27",
+  "ev": "game_over",
+  "placement": 8
+ }
+]
