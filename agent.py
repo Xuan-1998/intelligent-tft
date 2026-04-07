@@ -1,5 +1,5 @@
 #!/usr/bin/env python3 -u
-"""TFT Agent v6 — disciplined econ, proper placement, full game loop.
+"""TFT Agent v7 — scout opponents, buy during planning only, proper econ.
 Press Ctrl+C to stop.
 """
 import warnings; warnings.filterwarnings("ignore")
@@ -39,10 +39,12 @@ DEFAULT = screen_coords.DEFAULT_LOC.get_coords()
 AUG_LOC = [a.get_coords() for a in screen_coords.AUGMENT_LOC]
 ALL_C = set(game_assets.CHAMPIONS.keys())
 GOLD_BOX = (830, 845, 890, 885)
+PORTRAITS = [(1355, y) for y in range(204, 580, 54)]
 
 # ── Logging ──
 LOG_DIR = os.path.expanduser("~/intelligent-tft/game_logs")
-os.makedirs(LOG_DIR, exist_ok=True)
+SCOUT_DIR = os.path.expanduser("~/intelligent-tft/scout_logs")
+os.makedirs(LOG_DIR, exist_ok=True); os.makedirs(SCOUT_DIR, exist_ok=True)
 GID = time.strftime("%Y%m%d_%H%M%S")
 LOG = []
 HISTORY = os.path.expanduser("~/intelligent-tft/game_history.jsonl")
@@ -84,7 +86,7 @@ def fuzzy(t):
     for n in ALL_C:
         s = SequenceMatcher(None, t.lower(), n.lower()).ratio()
         if s > sc: best, sc = n, s
-    return best if sc >= 0.55 else None
+    return best if sc >= 0.5 else None
 
 def read_gold():
     try:
@@ -100,6 +102,9 @@ def read_round():
             if m: return m.group(0)
         except: pass
     return ""
+
+def is_planning():
+    return read_gold() >= 0
 
 def read_shop():
     try:
@@ -124,11 +129,10 @@ def detect_popup():
 
 # ── Actions ──
 def buy_slot(i): pyautogui.click(*BUY[i]); time.sleep(0.25)
-def buy_xp(): pyautogui.click(*BUY_XP); time.sleep(0.15)
-def reroll_shop(): pyautogui.click(*REROLL); time.sleep(0.2)
+def buy_xp(): pyautogui.click(*BUY_XP); time.sleep(0.2)
+def reroll_shop(): pyautogui.click(*REROLL); time.sleep(0.25)
 
 def place_bench_to_board():
-    """Tanks front (21-27), carries back (0-6)"""
     lvl = api_level()
     if lvl <= 0: lvl = 8
     pos = [21, 22, 23, 24, 0, 1, 2, 3, 14]
@@ -152,29 +156,37 @@ def handle_popup():
     return False
 
 def slam_items():
-    """Drag all item slots onto board champions"""
     slots = [p[0].get_coords() for p in screen_coords.ITEM_POS]
-    # Spread items across board positions (back row carries + front row tanks)
-    targets = [BOARD[21], BOARD[22], BOARD[23], BOARD[24], BOARD[0], BOARD[1], BOARD[2], BOARD[14], BOARD[25], BOARD[3]]
+    targets = [BOARD[21], BOARD[22], BOARD[0], BOARD[1]]
     for i, s in enumerate(slots):
         t = targets[i % len(targets)]
         pyautogui.moveTo(*s); time.sleep(0.05)
         pyautogui.mouseDown(); time.sleep(0.05)
         pyautogui.moveTo(*t, duration=0.1); pyautogui.mouseUp(); time.sleep(0.1)
 
+def scout_opponents():
+    ts = time.strftime('%Y%m%d_%H%M%S')
+    for i, (px, py) in enumerate(PORTRAITS[:7]):
+        pyautogui.click(px, py); time.sleep(0.8)
+        try: ocr._grab((0, 33, 1370, 850)).save(f'{SCOUT_DIR}/{ts}_p{i+1}.png')
+        except: pass
+    pyautogui.press('space'); time.sleep(0.5)
+    print(f"  🔍 Scouted 7 opponents")
+    log("scout")
+
 # ═══ MAIN ═══
-print(f"═══ TFT Agent v6 | {GID} ═══")
+print(f"═══ TFT Agent v7 | {GID} ═══")
 rnd = read_round(); lvl = api_level(); gold = read_gold()
 stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
 
-if lvl >= 8: phase = "ROLLDOWN"
-elif stage >= 4: phase = "ROLLDOWN"
+if stage >= 5 or lvl >= 8: phase = "LATEGAME"
+elif stage >= 4 or lvl >= 6: phase = "ROLLDOWN"
 else: phase = "EARLY"
 
 print(f"Start: R{rnd} G:{gold} Lvl:{lvl} → {phase}")
 log("startup", round=rnd, gold=gold, level=lvl, phase=phase)
 
-last_rnd = ""; cycle = 0; start_time = time.time()
+last_rnd = ""; cycle = 0; start = time.time(); scouted = False
 
 try:
     while RUNNING:
@@ -187,36 +199,56 @@ try:
         rnd = read_round(); stage = int(rnd[0]) if rnd and rnd[0].isdigit() else 0
 
         if rnd and rnd != last_rnd:
-            print(f"\n[R{rnd}] G:{gold} Lvl:{lvl} {phase} ({int(time.time()-start_time)}s)")
+            print(f"\n[R{rnd}] G:{gold} Lvl:{lvl} {phase} ({int(time.time()-start)}s)")
             log("round", round=rnd, gold=gold, level=lvl, phase=phase)
-            last_rnd = rnd
+            last_rnd = rnd; scouted = False
 
         if handle_popup():
             time.sleep(1); pickup_loot(); cycle += 1; continue
 
         if cycle % 10 == 0 and cycle > 0: pickup_loot()
 
+        planning = is_planning()
+
         # ── Phase transitions ──
-        # EARLY (stages 1-3): save gold, earn interest, don't spend
-        # ROLLDOWN (stage 4+): level to 8, roll for carries
-        # LATEGAME: maintain board
-        if phase == "EARLY" and stage >= 4:
+        if phase == "EARLY" and (stage >= 4 or lvl >= 7):
             phase = "ROLLDOWN"
-            print(f"\n🎯 → ROLLDOWN (stage {stage}, lvl {lvl})")
+            print(f"\n🎯 → ROLLDOWN (g={gold} lvl={lvl})")
             log("phase", phase="ROLLDOWN")
 
-        # ═══ EARLY (stages 1-3): SAVE GOLD, earn interest ═══
-        if phase == "EARLY":
-            if cycle % 5 == 0: place_bench_to_board()
-            if cycle % 4 == 0: slam_items()
-            # Only buy XP with gold ABOVE 50 (preserve max interest)
-            if gold > 50 and lvl < 7 and cycle % 4 == 0:
-                buy_xp()
-                print(f"  📈 XP (g={gold} lvl={lvl})")
+        # ═══ EARLY: buy cheap comp units, preserve interest ═══
+        if phase == "EARLY" and planning:
+            shop = read_shop()
+            for i, ch in enumerate(shop):
+                if not ch: continue
+                cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
+                g = read_gold()
+                if g < 0 or cost > g: continue
+                floor = (g // 10) * 10
+                if ch in comps.EARLY_GAME_BUYS and cost <= 2 and (g - cost) >= floor:
+                    buy_slot(i)
+                    print(f"  💰 {ch} ({cost}g)")
+                    log("buy", champ=ch, cost=cost)
 
-        # ═══ ROLLDOWN (level 8): roll and buy 3+ cost units ═══
-        elif phase == "ROLLDOWN":
-            # Already level 8 — just roll and buy
+            # XP only if excess gold (>50) in stage 3
+            if stage >= 3 and gold > 50 and lvl < 7:
+                for _ in range(2): buy_xp()
+                print(f"  📈 XP→{api_level()}")
+
+            if cycle % 4 == 0: place_bench_to_board()
+            if cycle % 6 == 0: slam_items()
+            if not scouted and stage >= 3:
+                scout_opponents(); scouted = True
+
+        # ═══ ROLLDOWN: level 8, roll for carries ═══
+        elif phase == "ROLLDOWN" and planning:
+            ct = 0
+            while RUNNING and api_level() < 8 and ct < 40:
+                g = read_gold()
+                if g >= 0 and g < 4: break
+                buy_xp(); ct += 1; time.sleep(0.2)
+            print(f"  Leveled to {api_level()}")
+
             targets = comps.ROLLDOWN_BUYS | comps.EARLY_GAME_BUYS
             found = []
             for roll in range(25):
@@ -228,19 +260,18 @@ try:
                 for i, ch in enumerate(shop):
                     if not ch: continue
                     cost = game_assets.CHAMPIONS.get(ch, {}).get("Gold", 99)
-                    if cost >= 3:
+                    if ch in targets or cost >= 4:
                         buy_slot(i); found.append(ch)
                         print(f"  🎯 {ch} ({cost}g)")
                         log("buy", champ=ch, cost=cost)
 
             place_bench_to_board(); slam_items()
-            print(f"  Rolldown done: {found}")
+            print(f"  Rolldown: {found}")
             log("rolldown", found=found)
-            phase = "LATEGAME"
-            print(f"\n🏆 → LATEGAME")
+            phase = "LATEGAME"; print(f"\n🏆 → LATEGAME")
 
-        # ═══ LATEGAME: slow roll for upgrades ═══
-        elif phase == "LATEGAME":
+        # ═══ LATEGAME: slow roll upgrades ═══
+        elif phase == "LATEGAME" and planning:
             g = read_gold()
             if g > 30:
                 reroll_shop()
@@ -252,11 +283,13 @@ try:
                 place_bench_to_board()
             if g > 50 and lvl < 9: buy_xp()
             if cycle % 8 == 0: slam_items()
+            if not scouted: scout_opponents(); scouted = True
 
-        pyautogui.moveTo(*DEFAULT); cycle += 1; time.sleep(1.2)
+        pyautogui.moveTo(*DEFAULT); cycle += 1; time.sleep(1.5)
 
 except KeyboardInterrupt:
     print("\n🛑 Stopped")
 finally:
     save_log()
-    print(f"📝 {LOG_DIR}/{GID}_log.json ({len(LOG)} events, {int(time.time()-start_time)}s)")
+    print(f"📝 {LOG_DIR}/{GID}_log.json ({len(LOG)} events, {int(time.time()-start)}s)")
+    print(f"📸 Scouts: {SCOUT_DIR}/")
