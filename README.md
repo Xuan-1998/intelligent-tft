@@ -12,33 +12,33 @@ Unlike traditional TFT bots that use hardcoded rules and fragile OCR coordinates
 
 ```
 ┌──────────────────────────────────┐
-│         Riot Live Client API      │  Gold, Level, HP, Players
+│         Riot Live Client API     │  Gold, Level, HP, Players
 └──────────────┬───────────────────┘
                │
 ┌──────────────▼───────────────────┐
-│         Screen Reader             │  Screenshots → game state
+│         Screen Reader            │  Screenshots → game state
 │  (mss + pyautogui)               │  Shop, Board, Items, Popups
 └──────────────┬───────────────────┘
                │
 ┌──────────────▼───────────────────┐
-│         Game State                │  Unified state object
+│         Game State               │  Unified state object
 │  round, gold, level, hp, shop,   │  Updated every tick
 │  board, bench, items, phase      │
 └──────────────┬───────────────────┘
                │
 ┌──────────────▼───────────────────┐
-│         Agent                     │  Decides actions
+│         Agent                    │  Decides actions
 │  Rule engine + LLM advisor       │  Buy, sell, position, items
 └──────────────┬───────────────────┘
                │
 ┌──────────────▼───────────────────┐
-│         Executor                  │  Performs actions
-│  pyautogui clicks/drags           │  Rate-limited, phase-aware
+│         Executor                 │  Performs actions
+│  pyautogui clicks/drags          │  Rate-limited, phase-aware
 └──────────────┬───────────────────┘
                │
 ┌──────────────▼───────────────────┐
-│         Memory                    │  Learns over time
-│  Game logs, replays, outcomes     │  Feeds back into Agent
+│         Memory                   │  Learns over time
+│  Game logs, replays, outcomes    │  Feeds back into Agent
 └──────────────────────────────────┘
 ```
 
